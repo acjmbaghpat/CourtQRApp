@@ -2,21 +2,46 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Court QR Workflow App</title>
+<title>Court QR Workflow</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body { font-family: Arial; padding: 15px; background:#f2f4f7;}
+body { font-family: Arial; padding:15px; background:#f2f4f7;}
 h2 { text-align:center; }
-button { padding:10px; margin:5px 0; width:100%; font-size:16px; border-radius:8px; border:none; background:#1976d2; color:white;}
-input, textarea { width:100%; padding:8px; margin:5px 0; }
-.card { background:white; padding:15px; border-radius:10px; margin-top:10px; }
+button {
+  padding:10px;
+  margin:5px 0;
+  width:100%;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
+  background:#1976d2;
+  color:white;
+}
+input, textarea {
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+}
+.card {
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-top:10px;
+}
 .hidden { display:none; }
-label { font-size:16px; }
 hr { margin:10px 0; }
+
+.pdfTemplate {
+  width: 210mm;
+  padding: 20mm;
+  font-size:14px;
+}
+.right { text-align:right; }
+.center { text-align:center; }
 </style>
 </head>
 
@@ -66,133 +91,150 @@ let currentCase = null;
 let selectedAccused = null;
 
 function startScanner(){
-    const codeReader = new ZXing.BrowserQRCodeReader();
-    const video = document.getElementById('video');
-    video.classList.remove('hidden');
+  const codeReader = new ZXing.BrowserQRCodeReader();
+  const video = document.getElementById('video');
+  video.classList.remove('hidden');
 
-    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-        if(result){
-            navigator.vibrate(200);
-            let caseNo = result.text.trim();
-            document.getElementById('scanResult').innerText = "Scanned Case: " + caseNo;
-            video.classList.add('hidden');
-            loadCase(caseNo);
-        }
-    });
+  codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+    if(result){
+      navigator.vibrate(200);
+      let caseNo = result.text.trim();
+      document.getElementById('scanResult').innerText = "Scanned Case: " + caseNo;
+      video.classList.add('hidden');
+      loadCase(caseNo);
+    }
+  });
 }
 
 function loadCase(caseNo){
-    let data = localStorage.getItem(caseNo);
-    if(data){
-        currentCase = JSON.parse(data);
-        showAccusedList();
-    } else {
-        currentCase = { caseNo: caseNo, accused: [] };
-        document.getElementById('formSection').classList.remove('hidden');
-        document.getElementById('caseNo').value = caseNo;
-        addAccused();
-    }
+  let data = localStorage.getItem(caseNo);
+  if(data){
+    currentCase = JSON.parse(data);
+    showAccusedList();
+  } else {
+    currentCase = { caseNo: caseNo, accused: [] };
+    document.getElementById('formSection').classList.remove('hidden');
+    document.getElementById('caseNo').value = caseNo;
+    addAccused();
+  }
 }
 
 function addAccused(){
-    let container = document.getElementById('accusedContainer');
-    let div = document.createElement('div');
-    div.innerHTML = `
-        <input type="text" placeholder="Accused Name">
-        <input type="text" placeholder="Father Name">
-        <textarea placeholder="Full Address"></textarea>
-        <hr>
-    `;
-    container.appendChild(div);
+  let container = document.getElementById('accusedContainer');
+  let div = document.createElement('div');
+  div.innerHTML = `
+    <input type="text" placeholder="Accused Name">
+    <input type="text" placeholder="Father Name">
+    <textarea placeholder="Full Address"></textarea>
+    <hr>
+  `;
+  container.appendChild(div);
 }
 
 function saveCase(){
-    currentCase.section = document.getElementById('section').value;
-    currentCase.ps = document.getElementById('ps').value;
-    currentCase.complainant = document.getElementById('complainant').value;
+  currentCase.section = document.getElementById('section').value;
+  currentCase.ps = document.getElementById('ps').value;
+  currentCase.complainant = document.getElementById('complainant').value;
 
-    currentCase.accused = [];
+  currentCase.accused = [];
 
-    let accusedDivs = document.querySelectorAll('#accusedContainer div');
-    accusedDivs.forEach(div=>{
-        let inputs = div.querySelectorAll('input, textarea');
-        currentCase.accused.push({
-            name: inputs[0].value,
-            father: inputs[1].value,
-            address: inputs[2].value
-        });
+  let accusedDivs = document.querySelectorAll('#accusedContainer div');
+  accusedDivs.forEach(div=>{
+    let inputs = div.querySelectorAll('input, textarea');
+    currentCase.accused.push({
+      name: inputs[0].value,
+      father: inputs[1].value,
+      address: inputs[2].value
     });
+  });
 
-    localStorage.setItem(currentCase.caseNo, JSON.stringify(currentCase));
-    alert("Case Saved Successfully ✅");
-    location.reload();
+  localStorage.setItem(currentCase.caseNo, JSON.stringify(currentCase));
+  alert("Case Saved Successfully ✅");
+  location.reload();
 }
 
 function showAccusedList(){
-    document.getElementById('accusedListSection').classList.remove('hidden');
-    let list = document.getElementById('accusedList');
-    list.innerHTML = "";
+  document.getElementById('accusedListSection').classList.remove('hidden');
+  let list = document.getElementById('accusedList');
+  list.innerHTML = "";
 
-    currentCase.accused.forEach((acc)=>{
-        let btn = document.createElement('button');
-        btn.innerText = acc.name + " (" + acc.father + ")";
-        btn.onclick = function(){
-            selectedAccused = acc;
-            document.getElementById('orderSection').classList.remove('hidden');
-        };
-        list.appendChild(btn);
-    });
+  currentCase.accused.forEach(acc=>{
+    let btn = document.createElement('button');
+    btn.innerText = acc.name + " (" + acc.father + ")";
+    btn.onclick = function(){
+      selectedAccused = acc;
+      document.getElementById('orderSection').classList.remove('hidden');
+    };
+    list.appendChild(btn);
+  });
 }
 
 async function generatePDF(){
 
-    const { jsPDF } = window.jspdf;
-    let checkboxes = document.querySelectorAll('#orderSection input[type=checkbox]:checked');
+  const { jsPDF } = window.jspdf;
+  let checkboxes = document.querySelectorAll('#orderSection input[type=checkbox]:checked');
 
-    if(!selectedAccused){
-        alert("Select Accused First");
-        return;
-    }
+  if(!selectedAccused){
+    alert("Select Accused First");
+    return;
+  }
 
-    if(checkboxes.length === 0){
-        alert("Select at least one Order Type");
-        return;
-    }
+  if(checkboxes.length === 0){
+    alert("Select at least one Order Type");
+    return;
+  }
 
-    let today = new Date().toLocaleDateString('en-GB');
+  let today = new Date().toLocaleDateString('en-GB');
 
-    checkboxes.forEach(box=>{
+  for (const box of checkboxes){
 
-        let doc = new jsPDF();
+    let doc = new jsPDF();
 
-        doc.setFontSize(12);
+    let htmlContent = `
+      <div class="pdfTemplate">
+        <div class="center"><b>अपर मुख्य न्यायिक मजिस्ट्रेट, बागपत</b></div>
+        <br>
 
-        doc.text("अपर मुख्य न्यायिक मजिस्ट्रेट, बागपत", 20, 20);
-        doc.text("Case No: " + currentCase.caseNo, 20, 30);
-        doc.text("U/S: " + currentCase.section, 20, 40);
-        doc.text("PS: " + currentCase.ps, 20, 50);
+        <div class="right">
+          <b>वाद संख्या:</b> ${currentCase.caseNo}<br>
+          <b>राज्य बनाम:</b> ${selectedAccused.name}<br>
+          <b>थाना:</b> ${currentCase.ps}<br>
+          <b>धारा:</b> ${currentCase.section}<br>
+          <b>दिनांक:</b> ${today}
+        </div>
 
-        doc.text("अभियुक्त:", 20, 65);
-        doc.text("नाम: " + selectedAccused.name, 20, 75);
-        doc.text("पिता का नाम: " + selectedAccused.father, 20, 85);
-        doc.text("पता: " + selectedAccused.address, 20, 95);
+        <br><br>
 
-        doc.text("आदेश प्रकार: " + box.value, 20, 115);
+        <b>अभियुक्त का विवरण:</b><br><br>
+        नाम: ${selectedAccused.name}<br>
+        पिता का नाम: ${selectedAccused.father}<br>
+        पता: ${selectedAccused.address}<br><br>
 
-        doc.text("दिनांक: " + today, 20, 130);
+        <b>आदेश प्रकार:</b> ${box.value}<br><br><br><br>
 
-        doc.text("अपर मुख्य न्यायिक मजिस्ट्रेट", 20, 160);
-        doc.text("बागपत", 20, 170);
+        <div class="right">
+          अपर मुख्य न्यायिक मजिस्ट्रेट<br>
+          बागपत
+        </div>
+      </div>
+    `;
 
-        let fileName = currentCase.caseNo + "_" + 
-                       selectedAccused.name + "_" + 
-                       box.value + "_" + 
+    await doc.html(htmlContent, {
+      callback: function (doc) {
+        let fileName = currentCase.caseNo + "_" +
+                       selectedAccused.name + "_" +
+                       box.value + "_" +
                        today.replaceAll("/","-") + ".pdf";
 
         doc.save(fileName);
+      },
+      x: 0,
+      y: 0
     });
 
-    alert("PDF Generated Successfully ✅");
+  }
+
+  alert("PDF Generated Successfully ✅");
 }
 
 </script>

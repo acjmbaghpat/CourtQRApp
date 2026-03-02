@@ -33,15 +33,6 @@ input, textarea {
   margin-top:10px;
 }
 .hidden { display:none; }
-hr { margin:10px 0; }
-
-.pdfTemplate {
-  width: 210mm;
-  padding: 20mm;
-  font-size:14px;
-}
-.right { text-align:right; }
-.center { text-align:center; }
 </style>
 </head>
 
@@ -169,7 +160,7 @@ function showAccusedList(){
   });
 }
 
-async function generatePDF(){
+function generatePDF(){
 
   const { jsPDF } = window.jspdf;
   let checkboxes = document.querySelectorAll('#orderSection input[type=checkbox]:checked');
@@ -186,53 +177,41 @@ async function generatePDF(){
 
   let today = new Date().toLocaleDateString('en-GB');
 
-  for (const box of checkboxes){
+  checkboxes.forEach(box=>{
 
     let doc = new jsPDF();
+    doc.setFontSize(12);
 
-    let htmlContent = `
-      <div class="pdfTemplate">
-        <div class="center"><b>अपर मुख्य न्यायिक मजिस्ट्रेट, बागपत</b></div>
-        <br>
+    // LEFT TITLE
+    doc.text("APAR MUKHYA NYAYIK MAGISTRATE, BAGHPAT", 20, 20);
 
-        <div class="right">
-          <b>वाद संख्या:</b> ${currentCase.caseNo}<br>
-          <b>राज्य बनाम:</b> ${selectedAccused.name}<br>
-          <b>थाना:</b> ${currentCase.ps}<br>
-          <b>धारा:</b> ${currentCase.section}<br>
-          <b>दिनांक:</b> ${today}
-        </div>
+    // RIGHT SIDE DETAILS
+    doc.text("Case No: " + currentCase.caseNo, 140, 30);
+    doc.text("State Vs: " + selectedAccused.name, 140, 40);
+    doc.text("PS: " + currentCase.ps, 140, 50);
+    doc.text("U/S: " + currentCase.section, 140, 60);
+    doc.text("Date: " + today, 140, 70);
 
-        <br><br>
+    // BODY
+    doc.text("Accused Details:", 20, 90);
+    doc.text("Name: " + selectedAccused.name, 20, 100);
+    doc.text("Father: " + selectedAccused.father, 20, 110);
+    doc.text("Address: " + selectedAccused.address, 20, 120);
 
-        <b>अभियुक्त का विवरण:</b><br><br>
-        नाम: ${selectedAccused.name}<br>
-        पिता का नाम: ${selectedAccused.father}<br>
-        पता: ${selectedAccused.address}<br><br>
+    doc.text("Order Type: " + box.value, 20, 140);
 
-        <b>आदेश प्रकार:</b> ${box.value}<br><br><br><br>
+    // SIGN
+    doc.text("Apar Mukhya Nyayik Magistrate", 140, 250);
+    doc.text("Baghpat", 140, 260);
 
-        <div class="right">
-          अपर मुख्य न्यायिक मजिस्ट्रेट<br>
-          बागपत
-        </div>
-      </div>
-    `;
+    let fileName = currentCase.caseNo + "_" +
+                   selectedAccused.name + "_" +
+                   box.value + "_" +
+                   today.replaceAll("/","-") + ".pdf";
 
-    await doc.html(htmlContent, {
-      callback: function (doc) {
-        let fileName = currentCase.caseNo + "_" +
-                       selectedAccused.name + "_" +
-                       box.value + "_" +
-                       today.replaceAll("/","-") + ".pdf";
+    doc.save(fileName);
 
-        doc.save(fileName);
-      },
-      x: 0,
-      y: 0
-    });
-
-  }
+  });
 
   alert("PDF Generated Successfully ✅");
 }

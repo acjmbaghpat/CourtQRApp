@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Court QR Workflow App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
+<style>
+body { font-family: Arial; padding: 15px; background:#f2f4f7;}
+h2 { text-align:center; }
+button { padding:10px; margin:5px 0; width:100%; font-size:16px; }
+input, textarea { width:100%; padding:8px; margin:5px 0; }
+.card { background:white; padding:15px; border-radius:10px; margin-top:10px; }
+.hidden { display:none; }
+</style>
+</head>
+
+<body>
+
+<h2>📂 Court QR Workflow</h2>
+
+<div class="card">
+<button onclick="startScanner()">📷 Scan QR</button>
+<p id="scanResult"></p>
+<video id="video" width="100%" class="hidden"></video>
+</div>
+
+<div id="formSection" class="card hidden">
+<h3>Case Entry</h3>
+<input type="text" id="caseNo" placeholder="Case No" readonly>
+<input type="text" id="section" placeholder="U/S">
+<input type="text" id="ps" placeholder="Police Station">
+<input type="text" id="complainant" placeholder="Complainant Name">
+
+<div id="accusedContainer"></div>
+<button onclick="addAccused()">➕ Add Accused</button>
+
+<button onclick="saveCase()">💾 Save Case</button>
+</div>
+
+<div id="accusedListSection" class="card hidden">
+<h3>Select Accused</h3>
+<div id="accusedList"></div>
+</div>
+
+<script>
+
+let currentCase = null;
+
+function startScanner(){
+    const codeReader = new ZXing.BrowserQRCodeReader();
+    const video = document.getElementById('video');
+    video.classList.remove('hidden');
+
+    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+        if(result){
+            navigator.vibrate(200);
+            let caseNo = result.text.trim();
+            document.getElementById('scanResult').innerText = "Scanned Case: " + caseNo;
+            video.classList.add('hidden');
+            loadCase(caseNo);
+        }
+    });
+}
+
+function loadCase(caseNo){
+    let data = localStorage.getItem(caseNo);
+    if(data){
+        currentCase = JSON.parse(data);
+        showAccusedList();
+    } else {
+        currentCase = { caseNo: caseNo, accused: [] };
+        document.getElementById('formSection').classList.remove('hidden');
+        document.getElementById('caseNo').value = caseNo;
+        addAccused();
+    }
+}
+
+function addAccused(){
+    let container = document.getElementById('accusedContainer');
+    let div = document.createElement('div');
+    div.innerHTML = `
+        <input type="text" placeholder="Accused Name">
+        <input type="text" placeholder="Father Name">
+        <textarea placeholder="Full Address"></textarea>
+        <hr>
+    `;
+    container.appendChild(div);
+}
+
+function saveCase(){
+    currentCase.section = document.getElementById('section').value;
+    currentCase.ps = document.getElementById('ps').value;
+    currentCase.complainant = document.getElementById('complainant').value;
+
+    let accusedDivs = document.querySelectorAll('#accusedContainer div');
+    accusedDivs.forEach(div=>{
+        let inputs = div.querySelectorAll('input, textarea');
+        currentCase.accused.push({
+            name: inputs[0].value,
+            father: inputs[1].value,
+            address: inputs[2].value
+        });
+    });
+
+    localStorage.setItem(currentCase.caseNo, JSON.stringify(currentCase));
+    alert("Case Saved Successfully ✅");
+    location.reload();
+}
+
+function showAccusedList(){
+    document.getElementById('accusedListSection').classList.remove('hidden');
+    let list = document.getElementById('accusedList');
+    list.innerHTML = "";
+
+    currentCase.accused.forEach((acc,i)=>{
+        let btn = document.createElement('button');
+        btn.innerText = acc.name + " (" + acc.father + ")";
+        btn.onclick = function(){
+            alert("Next Step: Order Selection (Coming in Step 2)");
+        };
+        list.appendChild(btn);
+    });
+}
+
+</script>
+
+</body>
+</html>

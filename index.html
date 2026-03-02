@@ -26,7 +26,7 @@ button{
   background:#1976d2;
   color:white;
 }
-input,textarea{
+input,textarea,select{
   width:100%;
   padding:8px;
   margin:5px 0;
@@ -102,6 +102,11 @@ input,textarea{
 </div>
 
 <div id="editor" contenteditable="true" class="hidden"></div>
+
+<div id="editorButtons" class="hidden">
+<button onclick="window.print()">🖨 PDF Generate / Print</button>
+<button onclick="closeEditor()">❌ Close Editor</button>
+</div>
 
 <script>
 
@@ -199,28 +204,44 @@ function generateProforma(){
   let type=document.getElementById('orderType').value;
   let editor=document.getElementById('editor');
 
+  let ccno=currentCase.ccno?currentCase.ccno:"";
+  let niyat=currentCase.niyatDate?currentCase.niyatDate:"";
+
+  let leftHeading="";
+  if(type==="Summons") leftHeading="सम्मन अभियुक्त -";
+  if(type==="BW") leftHeading="जमानती वारंट अभियुक्त -";
+  if(type==="NBW") leftHeading="गैर जमानती वारंट अभियुक्त -";
+  if(type==="82") leftHeading="धारा 82 दं.प्र.सं. उद्घोषणा -";
+  if(type==="83") leftHeading="धारा 83 दं.प्र.सं. कुर्की आदेश -";
+
   editor.innerHTML=`
   <div style="text-align:center;font-weight:bold;font-size:18px;">
   अपर मुख्य न्यायिक मजिस्ट्रेट, बागपत
   </div>
   <br>
-  <div style="text-align:right;">
-  वाद संख्या: ${currentCase.caseNo}<br>
-  राज्य बनाम: ${selectedAccused.name}<br>
-  थाना: ${currentCase.ps}<br>
-  धारा: ${currentCase.section}<br>
-  सी.सी. संख्या: ${currentCase.ccno}<br>
-  नियत दिनांक: ${currentCase.niyatDate}
+
+  <div style="display:flex;justify-content:space-between;">
+    <div style="width:50%;font-weight:bold;">
+      ${leftHeading}
+    </div>
+
+    <div style="width:50%;text-align:right;">
+      वाद संख्या: ${currentCase.caseNo}<br>
+      राज्य बनाम: ${selectedAccused.name}<br>
+      थाना: ${currentCase.ps}<br>
+      धारा: ${currentCase.section}<br>
+      सी.सी. संख्या: ${ccno}<br>
+      नियत दिनांक: ${niyat}
+    </div>
   </div>
+
   <br><br>
 
   अभियुक्त: ${selectedAccused.name}<br>
   पिता का नाम: ${selectedAccused.father}<br>
   पता: ${selectedAccused.address}
-  <br><br><br>
 
-  <b>${type} का प्रपत्र यहाँ से संपादन योग्य है।</b>
-  <br><br><br><br>
+  <br><br><br><br><br>
 
   <div style="text-align:right;">
   अपर मुख्य न्यायिक मजिस्ट्रेट<br>
@@ -229,7 +250,13 @@ function generateProforma(){
   `;
 
   editor.classList.remove('hidden');
+  document.getElementById('editorButtons').classList.remove('hidden');
   window.scrollTo(0,document.body.scrollHeight);
+}
+
+function closeEditor(){
+  document.getElementById('editor').classList.add('hidden');
+  document.getElementById('editorButtons').classList.add('hidden');
 }
 
 </script>

@@ -6,10 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-body { font-family: Arial; padding:15px; background:#f2f4f7;}
+body {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  padding:15px;
+  background:#f2f4f7;
+}
 h2 { text-align:center; }
 button {
   padding:10px;
@@ -33,6 +38,17 @@ input, textarea {
   margin-top:10px;
 }
 .hidden { display:none; }
+
+@media print {
+  body * { visibility:hidden; }
+  #printArea, #printArea * { visibility:visible; }
+  #printArea {
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+  }
+}
 </style>
 </head>
 
@@ -49,32 +65,31 @@ input, textarea {
 <div id="formSection" class="card hidden">
 <h3>Case Entry</h3>
 <input type="text" id="caseNo" readonly>
-<input type="text" id="section" placeholder="U/S">
-<input type="text" id="ps" placeholder="Police Station">
-<input type="text" id="complainant" placeholder="Complainant / State Name">
+<input type="text" id="section" placeholder="धारा (U/S)">
+<input type="text" id="ps" placeholder="थाना">
+<input type="text" id="complainant" placeholder="राज्य / वादी">
 
 <div id="accusedContainer"></div>
-<button onclick="addAccused()">➕ Add Accused</button>
-
-<button onclick="saveCase()">💾 Save Case</button>
+<button onclick="addAccused()">➕ अभियुक्त जोड़ें</button>
+<button onclick="saveCase()">💾 सेव करें</button>
 </div>
 
 <div id="accusedListSection" class="card hidden">
-<h3>Select Accused</h3>
+<h3>अभियुक्त चुनें</h3>
 <div id="accusedList"></div>
 </div>
 
 <div id="orderSection" class="card hidden">
-<h3>Select Order Type</h3>
-
-<label><input type="checkbox" value="Summons"> Summons</label><br>
-<label><input type="checkbox" value="BW"> BW</label><br>
-<label><input type="checkbox" value="NBW"> NBW</label><br>
-<label><input type="checkbox" value="82 CrPC"> 82 CrPC</label><br>
-<label><input type="checkbox" value="83 CrPC"> 83 CrPC</label><br><br>
-
-<button onclick="generatePDF()">📄 Generate PDF</button>
+<h3>आदेश प्रकार चुनें</h3>
+<label><input type="radio" name="orderType" value="Summons"> समन</label><br>
+<label><input type="radio" name="orderType" value="BW"> जमानती वारंट</label><br>
+<label><input type="radio" name="orderType" value="NBW"> गैर जमानती वारंट</label><br>
+<label><input type="radio" name="orderType" value="82"> धारा 82</label><br>
+<label><input type="radio" name="orderType" value="83"> धारा 83</label><br><br>
+<button onclick="generateProforma()">📄 प्रपत्र तैयार करें</button>
 </div>
+
+<div id="printArea" class="hidden"></div>
 
 <script>
 
@@ -88,9 +103,8 @@ function startScanner(){
 
   codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
     if(result){
-      navigator.vibrate(200);
       let caseNo = result.text.trim();
-      document.getElementById('scanResult').innerText = "Scanned Case: " + caseNo;
+      document.getElementById('scanResult').innerText = "स्कैन केस: " + caseNo;
       video.classList.add('hidden');
       loadCase(caseNo);
     }
@@ -115,108 +129,89 @@ function addAccused(){
   let container = document.getElementById('accusedContainer');
   let div = document.createElement('div');
   div.innerHTML = `
-    <input class="accName" type="text" placeholder="Accused Name">
-    <input class="accFather" type="text" placeholder="Father Name">
-    <textarea class="accAddress" placeholder="Full Address"></textarea>
+    <input class="accName" type="text" placeholder="अभियुक्त नाम">
+    <input class="accFather" type="text" placeholder="पिता का नाम">
+    <textarea class="accAddress" placeholder="पूरा पता"></textarea>
     <hr>
   `;
   container.appendChild(div);
 }
 
 function saveCase(){
-
   currentCase.section = document.getElementById('section').value;
   currentCase.ps = document.getElementById('ps').value;
   currentCase.complainant = document.getElementById('complainant').value;
-
   currentCase.accused = [];
 
   let names = document.querySelectorAll('.accName');
   let fathers = document.querySelectorAll('.accFather');
   let addresses = document.querySelectorAll('.accAddress');
 
-  for(let i=0; i<names.length; i++){
+  for(let i=0;i<names.length;i++){
     if(names[i].value.trim() !== ""){
       currentCase.accused.push({
-        name: names[i].value,
-        father: fathers[i].value,
-        address: addresses[i].value
+        name:names[i].value,
+        father:fathers[i].value,
+        address:addresses[i].value
       });
     }
   }
 
   localStorage.setItem(currentCase.caseNo, JSON.stringify(currentCase));
-  alert("Case Saved Successfully ✅");
   showAccusedList();
 }
 
 function showAccusedList(){
   document.getElementById('formSection').classList.add('hidden');
   document.getElementById('accusedListSection').classList.remove('hidden');
-  let list = document.getElementById('accusedList');
-  list.innerHTML = "";
-
+  let list=document.getElementById('accusedList');
+  list.innerHTML="";
   currentCase.accused.forEach(acc=>{
-    let btn = document.createElement('button');
-    btn.innerText = acc.name + " (" + acc.father + ")";
-    btn.onclick = function(){
-      selectedAccused = acc;
+    let btn=document.createElement('button');
+    btn.innerText=acc.name;
+    btn.onclick=function(){
+      selectedAccused=acc;
       document.getElementById('orderSection').classList.remove('hidden');
     };
     list.appendChild(btn);
   });
 }
 
-function generatePDF(){
+function generateProforma(){
 
-  const { jsPDF } = window.jspdf;
-  let checkboxes = document.querySelectorAll('#orderSection input[type=checkbox]:checked');
+  let order=document.querySelector('input[name="orderType"]:checked');
+  if(!order){ alert("आदेश चुनें"); return; }
 
-  if(!selectedAccused){
-    alert("Select Accused First");
-    return;
-  }
+  let today=new Date().toLocaleDateString('en-GB');
 
-  if(checkboxes.length === 0){
-    alert("Select at least one Order Type");
-    return;
-  }
+  document.getElementById('printArea').innerHTML=`
+  <div style="padding:40px; font-size:16px;">
+    <div style="text-align:center; font-weight:bold; font-size:18px;">
+      अपर मुख्य न्यायिक मजिस्ट्रेट, बागपत
+    </div>
+    <br>
+    <div style="text-align:right;">
+      वाद संख्या: ${currentCase.caseNo}<br>
+      राज्य बनाम: ${selectedAccused.name}<br>
+      थाना: ${currentCase.ps}<br>
+      धारा: ${currentCase.section}<br>
+      दिनांक: ${today}
+    </div>
+    <br><br>
+    अभियुक्त: ${selectedAccused.name}<br>
+    पिता का नाम: ${selectedAccused.father}<br>
+    पता: ${selectedAccused.address}<br><br><br>
+    आदेश प्रकार: ${order.value}
+    <br><br><br><br>
+    <div style="text-align:right;">
+      अपर मुख्य न्यायिक मजिस्ट्रेट<br>
+      बागपत
+    </div>
+  </div>
+  `;
 
-  let today = new Date().toLocaleDateString('en-GB');
-
-  checkboxes.forEach(box=>{
-
-    let doc = new jsPDF();
-    doc.setFontSize(12);
-
-    doc.text("APAR MUKHYA NYAYIK MAGISTRATE, BAGHPAT", 20, 20);
-
-    doc.text("Case No: " + currentCase.caseNo, 140, 30);
-    doc.text("State Vs: " + currentCase.complainant + " Vs " + selectedAccused.name, 140, 40);
-    doc.text("PS: " + currentCase.ps, 140, 50);
-    doc.text("U/S: " + currentCase.section, 140, 60);
-    doc.text("Date: " + today, 140, 70);
-
-    doc.text("Accused Details:", 20, 100);
-    doc.text("Name: " + selectedAccused.name, 20, 110);
-    doc.text("Father: " + selectedAccused.father, 20, 120);
-    doc.text("Address: " + selectedAccused.address, 20, 130);
-
-    doc.text("Order Type: " + box.value, 20, 150);
-
-    doc.text("Apar Mukhya Nyayik Magistrate", 140, 250);
-    doc.text("Baghpat", 140, 260);
-
-    let fileName = currentCase.caseNo + "_" +
-                   selectedAccused.name + "_" +
-                   box.value + "_" +
-                   today.replaceAll("/","-") + ".pdf";
-
-    doc.save(fileName);
-
-  });
-
-  alert("PDF Generated Successfully ✅");
+  document.getElementById('printArea').classList.remove('hidden');
+  window.print();
 }
 
 </script>

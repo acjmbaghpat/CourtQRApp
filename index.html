@@ -9,7 +9,7 @@
 <style>
 body{font-family:system-ui;background:#f2f4f7;margin:0;padding:10px}
 .section{background:#fff;padding:14px;margin-bottom:12px;border-radius:12px}
-input,button,select{width:100%;padding:12px;margin-top:8px;font-size:15px;border-radius:10px;border:1px solid #ccc}
+input,button,select{width:100%;padding:12px;margin-top:8px;font-size:15px;border-radius:10px;border:1px solid #ccc;box-sizing:border-box}
 button{background:#1976d2;color:#fff;border:none;cursor:pointer}
 .scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .dashboard{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
@@ -18,12 +18,12 @@ button{background:#1976d2;color:#fff;border:none;cursor:pointer}
 table{width:100%;border-collapse:collapse;min-width:900px}
 th,td{border:1px solid #ddd;padding:6px;font-size:13px}
 th{background:#f0f4ff;font-weight:700}
-td input{width:100%;border:none;padding:4px;font-size:13px;background:transparent}
+td input{width:100%;border:none;padding:4px;font-size:13px;background:transparent;box-sizing:border-box}
 #scannerWrap{position:fixed;inset:0;background:#000;display:none;z-index:999}
 #video{width:100%;height:75vh}
 #scannerWrap button{margin:10px;width:calc(100% - 20px)}
 #nextDatePopup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:1000}
-#popupBox{background:#fff;margin:25% auto;padding:20px;width:90%;border-radius:12px}
+#popupBox{background:#fff;margin:25% auto;padding:20px;width:90%;border-radius:12px;box-sizing:border-box}
 .highlight{background:#fff3cd;animation:blink 1s 3}
 @keyframes blink{0%{background:#fff3cd}50%{background:#fff}100%{background:#fff3cd}}
 </style>
@@ -90,8 +90,8 @@ td input{width:100%;border:none;padding:4px;font-size:13px;background:transparen
 
 <script>
 // ===================== IndexedDB Setup =====================
-const DB_NAME    = 'CourtFileManagerDB';
-const DB_VERSION = 1;
+const DB_NAME         = 'CourtFileManagerDB';
+const DB_VERSION      = 1;
 const STORE_VERSIONS  = 'versions';
 const STORE_METADATA  = 'metadata';
 
@@ -165,14 +165,24 @@ async function idbDelMeta(key) {
     });
 }
 
+// ===================== Constants & State =====================
+const DATA_KEYS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
+
+let currentData       = [];
+let uploadVersion     = 1;
+let scanMode          = "";
+let html5Qr           = null;
+let lastReceivedIndex = null;
+let lastScanCode      = "";
+let lastScanTime      = 0;
+let remarkTimeout;
+
 // ===================== Helpers =====================
 function sanitizeId(id) {
     return String(id || "").replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
-// Only field values — no recursive searchableText
-const DATA_KEYS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
-
+// BUG 1 & 3 FIX: sirf DATA_KEYS use karo — no recursion, no searchableText in itself
 function generateSearchableText(record) {
     return DATA_KEYS.map(k => record[k] || "").join(' ').toLowerCase();
 }
@@ -180,16 +190,6 @@ function generateSearchableText(record) {
 function dataKey() {
     return workDate.value + "_" + uploadVersion;
 }
-
-// ===================== State =====================
-let currentData      = [];
-let uploadVersion    = 1;
-let scanMode         = "";
-let html5Qr          = null;
-let lastReceivedIndex = null;
-let lastScanCode     = "";
-let lastScanTime     = 0;
-let remarkTimeout;
 
 // ===================== Init =====================
 window.onload = async () => {
@@ -209,15 +209,17 @@ window.onload = async () => {
 // ===================== Speaker =====================
 function speak(msg) {
     const s = new SpeechSynthesisUtterance(msg);
-    s.lang = "en-IN"; s.rate = 1;
+    s.lang = "en-IN";
+    s.rate = 1;
     speechSynthesis.speak(s);
 }
 
+// BUG 3 FIX: getUTCDate/Month use karo — timezone issue nahi aayega
 function speakNextDate(dateStr) {
     if (!dateStr) return;
     const d     = new Date(dateStr);
-    const day   = d.getDate();
-    const month = d.toLocaleString("en-IN", { month: "long" });
+    const day   = d.getUTCDate();
+    const month = d.toLocaleDateString("en-IN", { month: "long", timeZone: "UTC" });
     speak("Next date " + day + " " + month);
 }
 
@@ -254,9 +256,9 @@ async function loadVersions() {
         return;
     }
     versions.forEach(v => {
-        const opt  = document.createElement("option");
-        opt.value  = v;
-        opt.text   = "Upload " + v;
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.text  = "Upload " + v;
         versionSelect.appendChild(opt);
     });
 }
@@ -266,7 +268,7 @@ async function saveCurrentVersion() {
 }
 
 async function loadCurrentVersion() {
-    const v      = await idbGetMeta('current_version_' + workDate.value);
+    const v       = await idbGetMeta('current_version_' + workDate.value);
     uploadVersion = parseInt(v) || 1;
     versionSelect.value = uploadVersion;
 }
@@ -318,12 +320,12 @@ async function uploadExcel() {
     if (!file) { alert("Excel file select karo"); return; }
 
     try {
-        const versions  = await idbGetVersions(workDate.value);
-        uploadVersion   = versions.length + 1;
+        const versions = await idbGetVersions(workDate.value);
+        uploadVersion  = versions.length + 1;
 
-        const reader    = new FileReader();
-        reader.onerror  = () => alert("File read error.");
-        reader.onload   = async e => {
+        const reader   = new FileReader();
+        reader.onerror = () => alert("File read error.");
+        reader.onload  = async e => {
             try {
                 const wb    = XLSX.read(e.target.result, { type: "binary" });
                 const sheet = wb.Sheets[wb.SheetNames[0]];
@@ -351,10 +353,10 @@ async function uploadExcel() {
                     })
                     .filter(r => r.caseno !== "");
 
-                // Dropdown update
-                const opt  = document.createElement("option");
-                opt.value  = uploadVersion;
-                opt.text   = "Upload " + uploadVersion;
+                // Dropdown mein naya option add karo
+                const opt = document.createElement("option");
+                opt.value = uploadVersion;
+                opt.text  = "Upload " + uploadVersion;
                 versionSelect.appendChild(opt);
                 versionSelect.value = uploadVersion;
 
@@ -427,20 +429,27 @@ async function handleScan(code) {
     if (scanMode === "SENT") {
         if (currentData[idx].sent === "Sent") { alert("Already Sent"); speak("Already sent"); return; }
         currentData[idx].sent = "Sent";
+        // BUG 1 FIX: searchableText update karo scan ke baad
+        currentData[idx].searchableText = generateSearchableText(currentData[idx]);
         alert("✅ Sent");
         speak("File sent");
     }
 
     if (scanMode === "RECEIVED") {
-        if (currentData[idx].sent !== "Sent")      { alert("File abhi Sent nahi hua"); speak("File not sent yet"); return; }
+        if (currentData[idx].sent !== "Sent")         { alert("File abhi Sent nahi hua"); speak("File not sent yet"); return; }
         if (currentData[idx].received === "Received") { alert("Already Received"); speak("Already received"); return; }
         currentData[idx].received     = "Received";
         currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
         lastReceivedIndex             = idx;
+        // BUG 1 FIX: searchableText update karo scan ke baad
+        currentData[idx].searchableText = generateSearchableText(currentData[idx]);
         alert("✅ Received");
         speak("File received");
         nextDatePopup.style.display = "block";
     }
+
+    // BUG 2 FIX: search clear karo taki scanned row hamesha visible rahe
+    searchBox.value = "";
 
     drawTable(getFilteredData());
     scrollToFile(code);
@@ -463,6 +472,8 @@ async function saveNextDate() {
     const selectedDate = nextDateInput.value;
     if (!selectedDate) { alert("Date select karo"); return; }
     currentData[lastReceivedIndex].nextdate = selectedDate;
+    // searchableText bhi update karo
+    currentData[lastReceivedIndex].searchableText = generateSearchableText(currentData[lastReceivedIndex]);
     nextDateInput.value         = '';
     nextDatePopup.style.display = "none";
     lastReceivedIndex           = null;
@@ -482,32 +493,33 @@ async function updateRemark(caseNo, val) {
     remarkTimeout = setTimeout(async () => {
         const idx = currentData.findIndex(r => r.caseno === caseNo);
         if (idx !== -1) {
-            currentData[idx].remark          = val;
-            currentData[idx].searchableText  = generateSearchableText(currentData[idx]);
+            currentData[idx].remark         = val;
+            currentData[idx].searchableText = generateSearchableText(currentData[idx]);
             await saveLocal();
         }
     }, 400);
 }
 
 // ===================== Table =====================
+// BUG 4 FIX: remark input single line mein — no multiline template literal
 function drawTable(data) {
     if (!data || !data.length) { table.innerHTML = ""; return; }
 
     const HEADERS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
     const LABELS  = ["Sr.No","Case No","Party Name","Section","PS","Sent","Received","Recv. Date","Next Date","Remark"];
 
-    let html = "<tr>" + LABELS.map(x => `<th>${x}</th>`).join("") + "</tr>";
+    let html = "<tr>" + LABELS.map(x => "<th>" + x + "</th>").join("") + "</tr>";
 
     data.forEach(r => {
-        let row = `<tr id="row_${sanitizeId(r.caseno)}">`;
+        let row = '<tr id="row_' + sanitizeId(r.caseno) + '">';
         HEADERS.forEach(k => {
             if (k === "remark") {
-                const esc = String(r.caseno).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                row += `<td><input data-caseno="${String(r.caseno).replace(/"/g,'&quot;')}"
-                            value="${(r[k]||"").replace(/"/g,'&quot;')}"
-                            oninput="updateRemark('${esc}',this.value)"></td>`;
+                const casenoAttr = String(r.caseno).replace(/"/g, '&quot;');
+                const casenoJs   = String(r.caseno).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const valAttr    = String(r[k] || "").replace(/"/g, '&quot;');
+                row += '<td><input data-caseno="' + casenoAttr + '" value="' + valAttr + '" oninput="updateRemark(\'' + casenoJs + '\',this.value)"></td>';
             } else {
-                row += `<td>${r[k] || ""}</td>`;
+                row += '<td>' + (r[k] || "") + '</td>';
             }
         });
         row += "</tr>";
@@ -524,16 +536,16 @@ searchBox.addEventListener("input", () => drawTable(getFilteredData()));
 function downloadExcel() {
     if (!currentData.length) { alert("Data nahi hai download karne ke liye."); return; }
     const exportData = currentData.map(r => ({
-        "Sr.No":       r.srno,
-        "Case No":     r.caseno,
-        "Party Name":  r.partyname,
-        "Section":     r.section,
-        "PS":          r.ps,
-        "Sent":        r.sent,
-        "Received":    r.received,
-        "Recv. Date":  r.receiveddate,
-        "Next Date":   r.nextdate,
-        "Remark":      r.remark
+        "Sr.No":      r.srno,
+        "Case No":    r.caseno,
+        "Party Name": r.partyname,
+        "Section":    r.section,
+        "PS":         r.ps,
+        "Sent":       r.sent,
+        "Received":   r.received,
+        "Recv. Date": r.receiveddate,
+        "Next Date":  r.nextdate,
+        "Remark":     r.remark
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
@@ -550,8 +562,8 @@ async function deleteOldData() {
 
     try {
         // 1. STORE_METADATA — purane data records delete karo
-        const metaStore  = await getStore(STORE_METADATA, 'readwrite');
-        const metaKeys   = await new Promise((res, rej) => {
+        const metaStore = await getStore(STORE_METADATA, 'readwrite');
+        const metaKeys  = await new Promise((res, rej) => {
             const r = metaStore.getAllKeys();
             r.onsuccess = () => res(r.result);
             r.onerror   = e => rej(e.target.error);

@@ -2,264 +2,597 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Court Proforma System</title>
+<title>Court File Manager</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://unpkg.com/@zxing/library@latest"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
-
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body{
-  font-family:'Noto Sans Devanagari',sans-serif;
-  background:#f2f4f7;
-  padding:15px;
-}
-h2{text-align:center;}
-button{
-  padding:10px;
-  margin:5px 0;
-  width:100%;
-  font-size:16px;
-  border:none;
-  border-radius:8px;
-  background:#1976d2;
-  color:white;
-}
-input,textarea,select{
-  width:100%;
-  padding:8px;
-  margin:5px 0;
-}
-.card{
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-top:10px;
-}
-.hidden{display:none;}
-
-#editor{
-  background:white;
-  padding:40px;
-  margin-top:20px;
-  min-height:100vh;
-}
-
-@media print{
-  body *{visibility:hidden;}
-  #editor,#editor *{visibility:visible;}
-  #editor{
-    position:absolute;
-    left:0;
-    top:0;
-    width:100%;
-  }
-}
+body{font-family:system-ui;background:#f2f4f7;margin:0;padding:10px}
+.section{background:#fff;padding:14px;margin-bottom:12px;border-radius:12px}
+input,button,select{width:100%;padding:12px;margin-top:8px;font-size:15px;border-radius:10px;border:1px solid #ccc}
+button{background:#1976d2;color:#fff;border:none;cursor:pointer}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dashboard{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.card{background:#fff;padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:13px}
+.table-wrap{background:#fff;border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{border:1px solid #ddd;padding:6px;font-size:13px}
+th{background:#f0f4ff;font-weight:700}
+td input{width:100%;border:none;padding:4px;font-size:13px;background:transparent}
+#scannerWrap{position:fixed;inset:0;background:#000;display:none;z-index:999}
+#video{width:100%;height:75vh}
+#scannerWrap button{margin:10px;width:calc(100% - 20px)}
+#nextDatePopup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:1000}
+#popupBox{background:#fff;margin:25% auto;padding:20px;width:90%;border-radius:12px}
+.highlight{background:#fff3cd;animation:blink 1s 3}
+@keyframes blink{0%{background:#fff3cd}50%{background:#fff}100%{background:#fff3cd}}
 </style>
 </head>
-
 <body>
 
-<h2>⚖️ Court Proforma System</h2>
-
-<div class="card">
-<button onclick="startScanner()">📷 QR Scan</button>
-<input type="text" id="searchCase" placeholder="Case No search kare">
-<button onclick="manualSearch()">🔍 Search</button>
-<p id="scanResult"></p>
-<video id="video" width="100%" class="hidden"></video>
+<div class="section">
+  <h3>📅 Working Date</h3>
+  <input type="date" id="workDate">
+  <select id="versionSelect"></select>
 </div>
 
-<div id="formSection" class="card hidden">
-<h3>Case Entry</h3>
-<input type="text" id="caseNo" readonly>
-<input type="text" id="section" placeholder="धारा (U/S)">
-<input type="text" id="ps" placeholder="थाना">
-<input type="text" id="ccno" placeholder="सी.सी. संख्या">
-<input type="date" id="niyatDate">
-
-<div id="accusedContainer"></div>
-<button onclick="addAccused()">➕ अभियुक्त जोड़ें</button>
-<button onclick="saveCase()">💾 सेव करें</button>
+<div class="dashboard">
+  <div class="card">📁 Total<br><span id="totalCount">0</span></div>
+  <div class="card">📤 Sent<br><span id="sentCount">0</span></div>
+  <div class="card">📥 Received<br><span id="receivedCount">0</span></div>
+  <div class="card">💾 Storage<br><span id="storageUsage">...</span></div>
 </div>
 
-<div id="accusedListSection" class="card hidden">
-<h3>अभियुक्त चुनें</h3>
-<div id="accusedList"></div>
+<div class="section">
+  <h3>📥 Excel Upload</h3>
+  <input type="file" id="excelFile" accept=".xlsx,.xls">
+  <button onclick="uploadExcel()">Upload Excel</button>
 </div>
 
-<div id="orderSection" class="card hidden">
-<h3>आदेश प्रकार चुनें</h3>
-<select id="orderType">
-<option value="Summons">समन</option>
-<option value="BW">जमानती वारंट</option>
-<option value="NBW">गैर जमानती वारंट</option>
-<option value="82">धारा 82</option>
-<option value="83">धारा 83</option>
-</select>
-<button onclick="generateProforma()">📄 प्रपत्र तैयार करें</button>
+<div class="section">
+  <h3>🔍 Search</h3>
+  <input type="text" id="searchBox" placeholder="Case no, party name...">
 </div>
 
-<div id="editor" contenteditable="true" class="hidden"></div>
+<div class="section">
+  <h3>📷 Scan</h3>
+  <div class="scan-grid">
+    <button onclick="scanSent()">📤 Scan SENT</button>
+    <button onclick="scanReceived()">📥 Scan RECEIVED</button>
+  </div>
+</div>
 
-<div id="editorButtons" class="hidden">
-<button onclick="window.print()">🖨 PDF Generate / Print</button>
-<button onclick="closeEditor()">❌ Close Editor</button>
+<div class="section">
+  <button onclick="downloadExcel()">📤 Download Excel</button>
+</div>
+
+<div class="table-wrap">
+  <table id="table"></table>
+</div>
+
+<div class="section">
+  <button onclick="deleteOldData()" style="background:#e53935">🧹 Delete Data Older Than 30 Days</button>
+</div>
+
+<div id="scannerWrap">
+  <div id="video"></div>
+  <button onclick="stopScanner()">❌ Close Scanner</button>
+</div>
+
+<div id="nextDatePopup">
+  <div id="popupBox">
+    <h3>📅 Next Hearing Date</h3>
+    <input type="date" id="nextDateInput">
+    <button onclick="saveNextDate()">✅ Save</button>
+    <button onclick="closePopup()" style="background:#999;margin-top:8px">Cancel</button>
+  </div>
 </div>
 
 <script>
+// ===================== IndexedDB Setup =====================
+const DB_NAME    = 'CourtFileManagerDB';
+const DB_VERSION = 1;
+const STORE_VERSIONS  = 'versions';
+const STORE_METADATA  = 'metadata';
 
-let currentCase=null;
-let selectedAccused=null;
+let db;
 
-function startScanner(){
-  const codeReader=new ZXing.BrowserQRCodeReader();
-  const video=document.getElementById('video');
-  video.classList.remove('hidden');
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        if (db) return resolve(db);
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains(STORE_VERSIONS))
+                d.createObjectStore(STORE_VERSIONS, { keyPath: 'workDate' });
+            if (!d.objectStoreNames.contains(STORE_METADATA))
+                d.createObjectStore(STORE_METADATA, { keyPath: 'key' });
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(db); };
+        req.onerror   = e => reject("IndexedDB error: " + e.target.errorCode);
+    });
+}
 
-  codeReader.decodeFromVideoDevice(null,'video',(result,err)=>{
-    if(result){
-      let caseNo=result.text.trim();
-      document.getElementById('scanResult').innerText="स्कैन केस: "+caseNo;
-      video.classList.add('hidden');
-      loadCase(caseNo);
+async function getStore(storeName, mode) {
+    if (!db) await openDatabase();
+    return db.transaction(storeName, mode).objectStore(storeName);
+}
+
+// ---------- Versions store ----------
+async function idbGetVersions(date) {
+    const store = await getStore(STORE_VERSIONS, 'readonly');
+    return new Promise((resolve, reject) => {
+        const r = store.get(date);
+        r.onsuccess = () => resolve(r.result ? r.result.versions : []);
+        r.onerror   = e => reject(e.target.error);
+    });
+}
+
+async function idbSaveVersions(date, versions) {
+    const store = await getStore(STORE_VERSIONS, 'readwrite');
+    return new Promise((resolve, reject) => {
+        const r = store.put({ workDate: date, versions });
+        r.onsuccess = () => resolve();
+        r.onerror   = e => reject(e.target.error);
+    });
+}
+
+// ---------- Metadata store ----------
+async function idbGetMeta(key) {
+    const store = await getStore(STORE_METADATA, 'readonly');
+    return new Promise((resolve, reject) => {
+        const r = store.get(key);
+        r.onsuccess = () => resolve(r.result ? r.result.value : null);
+        r.onerror   = e => reject(e.target.error);
+    });
+}
+
+async function idbSetMeta(key, value) {
+    const store = await getStore(STORE_METADATA, 'readwrite');
+    return new Promise((resolve, reject) => {
+        const r = store.put({ key, value });
+        r.onsuccess = () => resolve();
+        r.onerror   = e => reject(e.target.error);
+    });
+}
+
+async function idbDelMeta(key) {
+    const store = await getStore(STORE_METADATA, 'readwrite');
+    return new Promise((resolve, reject) => {
+        const r = store.delete(key);
+        r.onsuccess = () => resolve();
+        r.onerror   = e => reject(e.target.error);
+    });
+}
+
+// ===================== Helpers =====================
+function sanitizeId(id) {
+    return String(id || "").replace(/[^a-zA-Z0-9-_]/g, '_');
+}
+
+// Only field values — no recursive searchableText
+const DATA_KEYS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
+
+function generateSearchableText(record) {
+    return DATA_KEYS.map(k => record[k] || "").join(' ').toLowerCase();
+}
+
+function dataKey() {
+    return workDate.value + "_" + uploadVersion;
+}
+
+// ===================== State =====================
+let currentData      = [];
+let uploadVersion    = 1;
+let scanMode         = "";
+let html5Qr          = null;
+let lastReceivedIndex = null;
+let lastScanCode     = "";
+let lastScanTime     = 0;
+let remarkTimeout;
+
+// ===================== Init =====================
+window.onload = async () => {
+    try {
+        await openDatabase();
+        const savedDate = localStorage.getItem('lastWorkDate');
+        workDate.value  = savedDate || new Date().toISOString().split("T")[0];
+        await loadVersions();
+        await loadCurrentVersion();
+        await loadLocal();
+        updateStorageUsage();
+    } catch(e) {
+        console.error("Init error:", e);
     }
-  });
+};
+
+// ===================== Speaker =====================
+function speak(msg) {
+    const s = new SpeechSynthesisUtterance(msg);
+    s.lang = "en-IN"; s.rate = 1;
+    speechSynthesis.speak(s);
 }
 
-function manualSearch(){
-  let caseNo=document.getElementById('searchCase').value.trim();
-  if(caseNo===""){alert("Case No डालें");return;}
-  loadCase(caseNo);
+function speakNextDate(dateStr) {
+    if (!dateStr) return;
+    const d     = new Date(dateStr);
+    const day   = d.getDate();
+    const month = d.toLocaleString("en-IN", { month: "long" });
+    speak("Next date " + day + " " + month);
 }
 
-function loadCase(caseNo){
-  let data=localStorage.getItem(caseNo);
-  if(data){
-    currentCase=JSON.parse(data);
-    showAccusedList();
-  }else{
-    currentCase={caseNo:caseNo,accused:[]};
-    document.getElementById('formSection').classList.remove('hidden');
-    document.getElementById('caseNo').value=caseNo;
-    document.getElementById('accusedContainer').innerHTML="";
-    addAccused();
-  }
-}
-
-function addAccused(){
-  let div=document.createElement('div');
-  div.innerHTML=`
-  <input class="accName" placeholder="अभियुक्त नाम">
-  <input class="accFather" placeholder="पिता का नाम">
-  <textarea class="accAddress" placeholder="पूरा पता"></textarea>
-  <hr>`;
-  document.getElementById('accusedContainer').appendChild(div);
-}
-
-function saveCase(){
-  currentCase.section=document.getElementById('section').value;
-  currentCase.ps=document.getElementById('ps').value;
-  currentCase.ccno=document.getElementById('ccno').value;
-  currentCase.niyatDate=document.getElementById('niyatDate').value;
-  currentCase.accused=[];
-
-  let names=document.querySelectorAll('.accName');
-  let fathers=document.querySelectorAll('.accFather');
-  let addresses=document.querySelectorAll('.accAddress');
-
-  for(let i=0;i<names.length;i++){
-    if(names[i].value.trim()!==""){
-      currentCase.accused.push({
-        name:names[i].value,
-        father:fathers[i].value,
-        address:addresses[i].value
-      });
+// ===================== Storage Display =====================
+async function updateStorageUsage() {
+    try {
+        if (navigator.storage && navigator.storage.estimate) {
+            const est    = await navigator.storage.estimate();
+            const usedMB = (est.usage  / 1048576).toFixed(2);
+            const totMB  = (est.quota  / 1048576).toFixed(0);
+            const pct    = ((est.usage / est.quota) * 100).toFixed(1);
+            storageUsage.innerText = usedMB + "MB / " + totMB + "MB (" + pct + "%)";
+        } else {
+            storageUsage.innerText = "IndexedDB";
+        }
+    } catch(e) {
+        storageUsage.innerText = "IndexedDB";
     }
-  }
-
-  localStorage.setItem(currentCase.caseNo,JSON.stringify(currentCase));
-  showAccusedList();
 }
 
-function showAccusedList(){
-  document.getElementById('formSection').classList.add('hidden');
-  document.getElementById('accusedListSection').classList.remove('hidden');
-  let list=document.getElementById('accusedList');
-  list.innerHTML="";
-  currentCase.accused.forEach(acc=>{
-    let btn=document.createElement('button');
-    btn.innerText=acc.name;
-    btn.onclick=function(){
-      selectedAccused=acc;
-      document.getElementById('orderSection').classList.remove('hidden');
-    };
-    list.appendChild(btn);
-  });
+// ===================== Dashboard =====================
+function updateDashboard() {
+    totalCount.innerText    = currentData.length;
+    sentCount.innerText     = currentData.filter(x => x.sent === "Sent").length;
+    receivedCount.innerText = currentData.filter(x => x.received === "Received").length;
 }
 
-function generateProforma(){
-
-  let type=document.getElementById('orderType').value;
-  let editor=document.getElementById('editor');
-
-  let ccno=currentCase.ccno?currentCase.ccno:"";
-  let niyat=currentCase.niyatDate?currentCase.niyatDate:"";
-
-  let leftHeading="";
-  if(type==="Summons") leftHeading="सम्मन अभियुक्त -";
-  if(type==="BW") leftHeading="जमानती वारंट अभियुक्त -";
-  if(type==="NBW") leftHeading="गैर जमानती वारंट अभियुक्त -";
-  if(type==="82") leftHeading="धारा 82 दं.प्र.सं. उद्घोषणा -";
-  if(type==="83") leftHeading="धारा 83 दं.प्र.सं. कुर्की आदेश -";
-
-  editor.innerHTML=`
-  <div style="text-align:center;font-weight:bold;font-size:18px;">
-  अपर मुख्य न्यायिक मजिस्ट्रेट, बागपत
-  </div>
-  <br>
-
-  <div style="display:flex;justify-content:space-between;">
-    <div style="width:50%;font-weight:bold;">
-      ${leftHeading}
-    </div>
-
-    <div style="width:50%;text-align:right;">
-      वाद संख्या: ${currentCase.caseNo}<br>
-      राज्य बनाम: ${selectedAccused.name}<br>
-      थाना: ${currentCase.ps}<br>
-      धारा: ${currentCase.section}<br>
-      सी.सी. संख्या: ${ccno}<br>
-      नियत दिनांक: ${niyat}
-    </div>
-  </div>
-
-  <br><br>
-
-  अभियुक्त: ${selectedAccused.name}<br>
-  पिता का नाम: ${selectedAccused.father}<br>
-  पता: ${selectedAccused.address}
-
-  <br><br><br><br><br>
-
-  <div style="text-align:right;">
-  अपर मुख्य न्यायिक मजिस्ट्रेट<br>
-  बागपत
-  </div>
-  `;
-
-  editor.classList.remove('hidden');
-  document.getElementById('editorButtons').classList.remove('hidden');
-  window.scrollTo(0,document.body.scrollHeight);
+// ===================== Versions =====================
+async function loadVersions() {
+    versionSelect.innerHTML = "";
+    const versions = await idbGetVersions(workDate.value);
+    if (versions.length === 0) {
+        versionSelect.innerHTML = '<option value="1">Upload 1</option>';
+        return;
+    }
+    versions.forEach(v => {
+        const opt  = document.createElement("option");
+        opt.value  = v;
+        opt.text   = "Upload " + v;
+        versionSelect.appendChild(opt);
+    });
 }
 
-function closeEditor(){
-  document.getElementById('editor').classList.add('hidden');
-  document.getElementById('editorButtons').classList.add('hidden');
+async function saveCurrentVersion() {
+    await idbSetMeta('current_version_' + workDate.value, uploadVersion);
 }
 
+async function loadCurrentVersion() {
+    const v      = await idbGetMeta('current_version_' + workDate.value);
+    uploadVersion = parseInt(v) || 1;
+    versionSelect.value = uploadVersion;
+}
+
+// ===================== Local Save / Load =====================
+async function saveLocal() {
+    try {
+        await idbSetMeta(dataKey(), currentData);
+        updateStorageUsage();
+    } catch(e) {
+        console.error("Save error:", e);
+    }
+}
+
+async function loadLocal() {
+    try {
+        const saved = await idbGetMeta(dataKey());
+        if (saved && Array.isArray(saved)) {
+            currentData = saved;
+            currentData.forEach(r => r.searchableText = generateSearchableText(r));
+        } else {
+            currentData = [];
+        }
+    } catch(e) {
+        console.error("Load error:", e);
+        currentData = [];
+    }
+    drawTable(getFilteredData());
+    updateDashboard();
+}
+
+// ===================== Date / Version Events =====================
+workDate.addEventListener("change", async () => {
+    localStorage.setItem('lastWorkDate', workDate.value);
+    await loadVersions();
+    await loadCurrentVersion();
+    await loadLocal();
+});
+
+versionSelect.addEventListener("change", async () => {
+    uploadVersion = parseInt(versionSelect.value);
+    await saveCurrentVersion();
+    await loadLocal();
+});
+
+// ===================== Excel Upload =====================
+async function uploadExcel() {
+    const file = excelFile.files[0];
+    if (!file) { alert("Excel file select karo"); return; }
+
+    try {
+        const versions  = await idbGetVersions(workDate.value);
+        uploadVersion   = versions.length + 1;
+
+        const reader    = new FileReader();
+        reader.onerror  = () => alert("File read error.");
+        reader.onload   = async e => {
+            try {
+                const wb    = XLSX.read(e.target.result, { type: "binary" });
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                let rows    = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+                // Pehli row header hai — hata do
+                if (rows.length > 0) rows.shift();
+
+                currentData = rows
+                    .map(r => {
+                        const rec = {
+                            srno:         r[0] || "",
+                            caseno:       String(r[1] || "").trim(),
+                            partyname:    r[2] || "",
+                            section:      r[3] || "",
+                            ps:           r[4] || "",
+                            sent:         "",
+                            received:     "",
+                            receiveddate: "",
+                            nextdate:     "",
+                            remark:       ""
+                        };
+                        rec.searchableText = generateSearchableText(rec);
+                        return rec;
+                    })
+                    .filter(r => r.caseno !== "");
+
+                // Dropdown update
+                const opt  = document.createElement("option");
+                opt.value  = uploadVersion;
+                opt.text   = "Upload " + uploadVersion;
+                versionSelect.appendChild(opt);
+                versionSelect.value = uploadVersion;
+
+                // Save
+                versions.push(uploadVersion);
+                await idbSaveVersions(workDate.value, versions);
+                await saveCurrentVersion();
+                await saveLocal();
+
+                drawTable(getFilteredData());
+                updateDashboard();
+                speak("Excel uploaded");
+                alert("Excel upload ho gaya! (" + currentData.length + " records)");
+                excelFile.value = "";
+            } catch(err) {
+                console.error("Excel error:", err);
+                alert("Excel process karne mein error: " + err.message);
+            }
+        };
+        reader.readAsBinaryString(file);
+    } catch(err) {
+        console.error("Upload error:", err);
+        alert("Upload fail hua.");
+    }
+}
+
+// ===================== Filter =====================
+function getFilteredData() {
+    const q = searchBox.value.trim().toLowerCase();
+    return q
+        ? currentData.filter(r => r.searchableText && r.searchableText.includes(q))
+        : currentData;
+}
+
+// ===================== Scanner =====================
+function scanSent()     { scanMode = "SENT";     startScanner(); }
+function scanReceived() { scanMode = "RECEIVED"; startScanner(); }
+
+async function startScanner() {
+    scannerWrap.style.display = "block";
+    html5Qr = new Html5Qrcode("video");
+    try {
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices.length) { alert("Camera nahi mila."); stopScanner(); return; }
+        const cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[devices.length - 1];
+        html5Qr.start(cam.id, { fps: 10, qrbox: 250 }, text => handleScan(text.trim()));
+    } catch(err) {
+        console.error("Scanner error:", err);
+        stopScanner();
+    }
+}
+
+function stopScanner() {
+    if (html5Qr) {
+        html5Qr.stop().then(() => html5Qr.clear()).catch(e => console.error(e));
+        html5Qr = null;
+    }
+    scannerWrap.style.display = "none";
+}
+
+async function handleScan(code) {
+    const now = Date.now();
+    if (code === lastScanCode && now - lastScanTime < 1500) return;
+    lastScanCode = code;
+    lastScanTime = now;
+
+    const idx = currentData.findIndex(r => r.caseno === code);
+    if (idx === -1) { alert("File Not Found: " + code); speak("File not found"); return; }
+
+    if (scanMode === "SENT") {
+        if (currentData[idx].sent === "Sent") { alert("Already Sent"); speak("Already sent"); return; }
+        currentData[idx].sent = "Sent";
+        alert("✅ Sent");
+        speak("File sent");
+    }
+
+    if (scanMode === "RECEIVED") {
+        if (currentData[idx].sent !== "Sent")      { alert("File abhi Sent nahi hua"); speak("File not sent yet"); return; }
+        if (currentData[idx].received === "Received") { alert("Already Received"); speak("Already received"); return; }
+        currentData[idx].received     = "Received";
+        currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
+        lastReceivedIndex             = idx;
+        alert("✅ Received");
+        speak("File received");
+        nextDatePopup.style.display = "block";
+    }
+
+    drawTable(getFilteredData());
+    scrollToFile(code);
+    updateDashboard();
+    await saveLocal();
+}
+
+// ===================== Scroll =====================
+function scrollToFile(caseno) {
+    const row = document.getElementById("row_" + sanitizeId(caseno));
+    if (!row) return;
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    row.classList.add("highlight");
+    setTimeout(() => row.classList.remove("highlight"), 3000);
+}
+
+// ===================== Next Date =====================
+async function saveNextDate() {
+    if (lastReceivedIndex === null) return;
+    const selectedDate = nextDateInput.value;
+    if (!selectedDate) { alert("Date select karo"); return; }
+    currentData[lastReceivedIndex].nextdate = selectedDate;
+    nextDateInput.value         = '';
+    nextDatePopup.style.display = "none";
+    lastReceivedIndex           = null;
+    drawTable(getFilteredData());
+    speakNextDate(selectedDate);
+    await saveLocal();
+}
+
+function closePopup() {
+    nextDatePopup.style.display = "none";
+    lastReceivedIndex = null;
+}
+
+// ===================== Remark =====================
+async function updateRemark(caseNo, val) {
+    clearTimeout(remarkTimeout);
+    remarkTimeout = setTimeout(async () => {
+        const idx = currentData.findIndex(r => r.caseno === caseNo);
+        if (idx !== -1) {
+            currentData[idx].remark          = val;
+            currentData[idx].searchableText  = generateSearchableText(currentData[idx]);
+            await saveLocal();
+        }
+    }, 400);
+}
+
+// ===================== Table =====================
+function drawTable(data) {
+    if (!data || !data.length) { table.innerHTML = ""; return; }
+
+    const HEADERS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
+    const LABELS  = ["Sr.No","Case No","Party Name","Section","PS","Sent","Received","Recv. Date","Next Date","Remark"];
+
+    let html = "<tr>" + LABELS.map(x => `<th>${x}</th>`).join("") + "</tr>";
+
+    data.forEach(r => {
+        let row = `<tr id="row_${sanitizeId(r.caseno)}">`;
+        HEADERS.forEach(k => {
+            if (k === "remark") {
+                const esc = String(r.caseno).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+                row += `<td><input data-caseno="${String(r.caseno).replace(/"/g,'&quot;')}"
+                            value="${(r[k]||"").replace(/"/g,'&quot;')}"
+                            oninput="updateRemark('${esc}',this.value)"></td>`;
+            } else {
+                row += `<td>${r[k] || ""}</td>`;
+            }
+        });
+        row += "</tr>";
+        html += row;
+    });
+
+    table.innerHTML = html;
+}
+
+// ===================== Search =====================
+searchBox.addEventListener("input", () => drawTable(getFilteredData()));
+
+// ===================== Download Excel =====================
+function downloadExcel() {
+    if (!currentData.length) { alert("Data nahi hai download karne ke liye."); return; }
+    const exportData = currentData.map(r => ({
+        "Sr.No":       r.srno,
+        "Case No":     r.caseno,
+        "Party Name":  r.partyname,
+        "Section":     r.section,
+        "PS":          r.ps,
+        "Sent":        r.sent,
+        "Received":    r.received,
+        "Recv. Date":  r.receiveddate,
+        "Next Date":   r.nextdate,
+        "Remark":      r.remark
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Court Data");
+    XLSX.writeFile(wb, "Court_" + workDate.value + "_v" + uploadVersion + ".xlsx");
+}
+
+// ===================== Delete Old Data =====================
+async function deleteOldData() {
+    if (!confirm("30 din se purana data delete karein?")) return;
+
+    const today = new Date();
+    let count   = 0;
+
+    try {
+        // 1. STORE_METADATA — purane data records delete karo
+        const metaStore  = await getStore(STORE_METADATA, 'readwrite');
+        const metaKeys   = await new Promise((res, rej) => {
+            const r = metaStore.getAllKeys();
+            r.onsuccess = () => res(r.result);
+            r.onerror   = e => rej(e.target.error);
+        });
+
+        for (const key of metaKeys) {
+            if (key.startsWith('current_version_')) continue;
+            const datePart = key.substring(0, 10); // "YYYY-MM-DD"
+            const fileDate = new Date(datePart);
+            if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
+                await idbDelMeta(key);
+                count++;
+            }
+        }
+
+        // 2. STORE_VERSIONS — purani date entries delete karo
+        const verStore = await getStore(STORE_VERSIONS, 'readwrite');
+        const allDates = await new Promise((res, rej) => {
+            const r = verStore.getAllKeys();
+            r.onsuccess = () => res(r.result);
+            r.onerror   = e => rej(e.target.error);
+        });
+
+        for (const dateKey of allDates) {
+            const fileDate = new Date(dateKey);
+            if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
+                await new Promise((res, rej) => {
+                    const r = verStore.delete(dateKey);
+                    r.onsuccess = () => res();
+                    r.onerror   = e => rej(e.target.error);
+                });
+            }
+        }
+
+        alert(count + " purane records delete ho gaye.");
+        updateStorageUsage();
+    } catch(err) {
+        console.error("Delete error:", err);
+        alert("Delete fail hua.");
+    }
+}
 </script>
-
 </body>
 </html>

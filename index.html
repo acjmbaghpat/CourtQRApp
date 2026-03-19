@@ -7,7 +7,6 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* Modern Color Palette & Typography */
 :root {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
@@ -33,7 +32,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* App Header */
 .app-header {
   background: var(--primary);
   color: white;
@@ -48,14 +46,12 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* Main Container */
 .container {
   padding: 16px;
   max-width: 1000px;
   margin: 0 auto;
 }
 
-/* Sections / Cards */
 .section {
   background: var(--surface);
   padding: 20px;
@@ -75,7 +71,6 @@ h3 {
   gap: 8px;
 }
 
-/* Inputs & Selects */
 input, select {
   width: 100%;
   padding: 14px 16px;
@@ -87,7 +82,7 @@ input, select {
   background-color: var(--bg-color);
   color: var(--text-main);
   transition: border-color 0.2s, box-shadow 0.2s;
-  appearance: none; /* Removes default webkit styles */
+  appearance: none;
 }
 
 input:focus, select:focus {
@@ -102,7 +97,6 @@ input[type="file"] {
   background: var(--surface);
 }
 
-/* Buttons */
 button {
   width: 100%;
   padding: 14px 16px;
@@ -122,20 +116,12 @@ button {
   gap: 8px;
 }
 
-button:active {
-  transform: scale(0.98);
-}
+button:active  { transform: scale(0.98); }
+button:hover   { background: var(--primary-hover); }
 
-button:hover {
-  background: var(--primary-hover);
-}
+.btn-danger         { background: var(--danger); }
+.btn-danger:hover   { background: #dc2626; }
 
-.btn-danger {
-  background: var(--danger);
-}
-.btn-danger:hover { background: #dc2626; }
-
-/* Grids */
 .scan-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -144,13 +130,13 @@ button:hover {
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2x2 on mobile */
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 16px;
 }
 
 @media (min-width: 600px) {
-  .dashboard { grid-template-columns: repeat(4, 1fr); } /* 4 in a row on desktop */
+  .dashboard { grid-template-columns: repeat(4, 1fr); }
 }
 
 .card {
@@ -175,7 +161,6 @@ button:hover {
   font-weight: 700;
 }
 
-/* Table Design */
 .table-wrap {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -223,13 +208,13 @@ td input:focus {
 }
 
 tr:last-child td { border-bottom: none; }
-tr:hover { background-color: #f8fafc; }
+tr:hover         { background-color: #f8fafc; }
 
-/* Scanners & Popups */
+/* ---- Scanner ---- */
 #scannerWrap {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0,0,0,0.8);
   backdrop-filter: blur(5px);
   display: none;
   z-index: 999;
@@ -252,10 +237,11 @@ tr:hover { background-color: #f8fafc; }
   font-size: 16px;
 }
 
+/* ---- Next Date Popup ---- */
 #nextDatePopup {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0,0,0,0.5);
   backdrop-filter: blur(4px);
   display: none;
   z-index: 1000;
@@ -269,19 +255,25 @@ tr:hover { background-color: #f8fafc; }
   max-width: 400px;
   border-radius: var(--radius-lg);
   box-sizing: border-box;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
   animation: slideUp 0.3s ease-out;
 }
 
+#popupBox h3  { font-size: 17px; margin-bottom: 14px; }
+#popupBox input { margin-top: 0; }
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ---- Highlight ---- */
 .highlight {
-  background: #fef08a !important; /* Yellow highlight */
+  background: #fef08a !important;
   animation: pulse 1.5s 2;
 }
+
+/* ---- Floating Scan Buttons ---- */
 .floating-scan {
   position: fixed;
   bottom: 20px;
@@ -301,13 +293,12 @@ tr:hover { background-color: #f8fafc; }
 </head>
 <body>
 
-<div class="app-header">
-  ⚖️ Court File Manager
-</div>
+<div class="app-header">⚖️ Court File Manager</div>
 
 <div class="container">
+
   <div class="section">
-    <h3>📅 Working Date & Version</h3>
+    <h3>📅 Working Date &amp; Version</h3>
     <input type="date" id="workDate">
     <select id="versionSelect"></select>
   </div>
@@ -316,7 +307,7 @@ tr:hover { background-color: #f8fafc; }
     <div class="card">📁 Total<br><span id="totalCount">0</span></div>
     <div class="card">📤 Sent<br><span id="sentCount">0</span></div>
     <div class="card">📥 Received<br><span id="receivedCount">0</span></div>
-    <div class="card">💾 Storage<br><span id="storageUsage" style="font-size:14px; margin-top:4px;">...</span></div>
+    <div class="card">💾 Storage<br><span id="storageUsage" style="font-size:14px;margin-top:4px;">...</span></div>
   </div>
 
   <div class="section">
@@ -331,108 +322,121 @@ tr:hover { background-color: #f8fafc; }
   </div>
 
   <div class="section">
-  <h3>📷 Scan Files</h3>
-</div>
+    <h3>📷 Scan Files</h3>
+  </div>
 
-<!-- FLOATING BUTTONS (OUTSIDE SECTION) -->
-  <div class="section" style="padding: 10px;">
-    <button onclick="downloadExcel()" style="margin-top: 0; background: var(--success);">📊 Download Excel Report</button>
+  <div class="section" style="padding:10px;">
+    <button onclick="downloadExcel()" style="margin-top:0; background:var(--success);">📊 Download Excel Report</button>
   </div>
 
   <div class="table-wrap">
     <table id="table"></table>
   </div>
 
-  <div class="section" style="border-color: var(--danger); background: #fef2f2;">
-    <h3 style="color: var(--danger);">⚠️ Danger Zone</h3>
+  <div class="section" style="border-color:var(--danger); background:#fef2f2;">
+    <h3 style="color:var(--danger);">⚠️ Danger Zone</h3>
     <button onclick="deleteOldData()" class="btn-danger">🧹 Delete Data Older Than 30 Days</button>
   </div>
-</div>
+
+</div><!-- /container -->
+
+<!-- Floating scan buttons -->
 <div class="floating-scan">
   <button onclick="scanSent()">📤 Scan SENT</button>
   <button onclick="scanReceived()">📥 Scan RECEIVED</button>
 </div>
+
+<!-- Scanner overlay -->
 <div id="scannerWrap">
   <div id="video"></div>
   <button onclick="stopScanner()">❌ Close Scanner</button>
 </div>
 
+<!-- ✅ FIX 1: Next Date Popup HTML — was completely missing -->
+<div id="nextDatePopup">
+  <div id="popupBox">
+    <h3>📅 Next Hearing Date</h3>
+    <input type="date" id="nextDateInput">
+    <button onclick="saveNextDate()">✅ Save Date</button>
+    <button onclick="closePopup()" style="background:#94a3b8; margin-top:8px;">❌ Skip</button>
+  </div>
 </div>
+
 <script>
 // ===================== IndexedDB Setup =====================
-const DB_NAME         = 'CourtFileManagerDB';
-const DB_VERSION      = 1;
-const STORE_VERSIONS  = 'versions';
-const STORE_METADATA  = 'metadata';
+const DB_NAME        = 'CourtFileManagerDB';
+const DB_VERSION     = 1;
+const STORE_VERSIONS = 'versions';
+const STORE_METADATA = 'metadata';
 
 let db;
 
 function openDatabase() {
-    return new Promise((resolve, reject) => {
-        if (db) return resolve(db);
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = e => {
-            const d = e.target.result;
-            if (!d.objectStoreNames.contains(STORE_VERSIONS))
-                d.createObjectStore(STORE_VERSIONS, { keyPath: 'workDate' });
-            if (!d.objectStoreNames.contains(STORE_METADATA))
-                d.createObjectStore(STORE_METADATA, { keyPath: 'key' });
-        };
-        req.onsuccess = e => { db = e.target.result; resolve(db); };
-        req.onerror   = e => reject("IndexedDB error: " + e.target.errorCode);
-    });
+  return new Promise((resolve, reject) => {
+    if (db) return resolve(db);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_VERSIONS))
+        d.createObjectStore(STORE_VERSIONS, { keyPath: 'workDate' });
+      if (!d.objectStoreNames.contains(STORE_METADATA))
+        d.createObjectStore(STORE_METADATA, { keyPath: 'key' });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror   = e => reject("IndexedDB error: " + e.target.errorCode);
+  });
 }
 
 async function getStore(storeName, mode) {
-    if (!db) await openDatabase();
-    return db.transaction(storeName, mode).objectStore(storeName);
+  if (!db) await openDatabase();
+  return db.transaction(storeName, mode).objectStore(storeName);
 }
 
 // ---------- Versions store ----------
 async function idbGetVersions(date) {
-    const store = await getStore(STORE_VERSIONS, 'readonly');
-    return new Promise((resolve, reject) => {
-        const r = store.get(date);
-        r.onsuccess = () => resolve(r.result ? r.result.versions : []);
-        r.onerror   = e => reject(e.target.error);
-    });
+  const store = await getStore(STORE_VERSIONS, 'readonly');
+  return new Promise((resolve, reject) => {
+    const r = store.get(date);
+    r.onsuccess = () => resolve(r.result ? r.result.versions : []);
+    r.onerror   = e => reject(e.target.error);
+  });
 }
 
 async function idbSaveVersions(date, versions) {
-    const store = await getStore(STORE_VERSIONS, 'readwrite');
-    return new Promise((resolve, reject) => {
-        const r = store.put({ workDate: date, versions });
-        r.onsuccess = () => resolve();
-        r.onerror   = e => reject(e.target.error);
-    });
+  const store = await getStore(STORE_VERSIONS, 'readwrite');
+  return new Promise((resolve, reject) => {
+    const r = store.put({ workDate: date, versions });
+    r.onsuccess = () => resolve();
+    r.onerror   = e => reject(e.target.error);
+  });
 }
 
 // ---------- Metadata store ----------
 async function idbGetMeta(key) {
-    const store = await getStore(STORE_METADATA, 'readonly');
-    return new Promise((resolve, reject) => {
-        const r = store.get(key);
-        r.onsuccess = () => resolve(r.result ? r.result.value : null);
-        r.onerror   = e => reject(e.target.error);
-    });
+  const store = await getStore(STORE_METADATA, 'readonly');
+  return new Promise((resolve, reject) => {
+    const r = store.get(key);
+    r.onsuccess = () => resolve(r.result ? r.result.value : null);
+    r.onerror   = e => reject(e.target.error);
+  });
 }
 
 async function idbSetMeta(key, value) {
-    const store = await getStore(STORE_METADATA, 'readwrite');
-    return new Promise((resolve, reject) => {
-        const r = store.put({ key, value });
-        r.onsuccess = () => resolve();
-        r.onerror   = e => reject(e.target.error);
-    });
+  const store = await getStore(STORE_METADATA, 'readwrite');
+  return new Promise((resolve, reject) => {
+    const r = store.put({ key, value });
+    r.onsuccess = () => resolve();
+    r.onerror   = e => reject(e.target.error);
+  });
 }
 
 async function idbDelMeta(key) {
-    const store = await getStore(STORE_METADATA, 'readwrite');
-    return new Promise((resolve, reject) => {
-        const r = store.delete(key);
-        r.onsuccess = () => resolve();
-        r.onerror   = e => reject(e.target.error);
-    });
+  const store = await getStore(STORE_METADATA, 'readwrite');
+  return new Promise((resolve, reject) => {
+    const r = store.delete(key);
+    r.onsuccess = () => resolve();
+    r.onerror   = e => reject(e.target.error);
+  });
 }
 
 // ===================== Constants & State =====================
@@ -449,458 +453,471 @@ let remarkTimeout;
 
 // ===================== Helpers =====================
 function sanitizeId(id) {
-    return String(id || "").replace(/[^a-zA-Z0-9-_]/g, '_');
+  return String(id || "").replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
 function generateSearchableText(record) {
-    return DATA_KEYS.map(k => record[k] || "").join(' ').toLowerCase();
+  return DATA_KEYS.map(k => record[k] || "").join(' ').toLowerCase();
 }
 
 function dataKey() {
-    return workDate.value + "_" + uploadVersion;
+  return workDate.value + "_" + uploadVersion;
 }
 
 // ===================== Init =====================
 window.onload = async () => {
-    try {
-        await openDatabase();
-        const savedDate = localStorage.getItem('lastWorkDate');
-        workDate.value  = savedDate || new Date().toISOString().split("T")[0];
-        await loadVersions();
-        await loadCurrentVersion();
-        await loadLocal();
-        updateStorageUsage();
-    } catch(e) {
-        console.error("Init error:", e);
-    }
+  try {
+    await openDatabase();
+    const savedDate   = localStorage.getItem('lastWorkDate');
+    workDate.value    = savedDate || new Date().toISOString().split("T")[0];
+    await loadVersions();
+    await loadCurrentVersion();
+    await loadLocal();
+    updateStorageUsage();
+  } catch(e) {
+    console.error("Init error:", e);
+  }
 };
 
 // ===================== Speaker =====================
 function speak(msg) {
-    const s = new SpeechSynthesisUtterance(msg);
-    s.lang = "en-IN";
-    s.rate = 1;
-    speechSynthesis.speak(s);
+  const s = new SpeechSynthesisUtterance(msg);
+  s.lang = "en-IN";
+  s.rate = 1;
+  speechSynthesis.speak(s);
 }
 
 function speakNextDate(dateStr) {
-    if (!dateStr) return;
-    const d     = new Date(dateStr);
-    const day   = d.getUTCDate();
-    const month = d.toLocaleDateString("en-IN", { month: "long", timeZone: "UTC" });
-    speak("Next date " + day + " " + month);
+  if (!dateStr) return;
+  const d     = new Date(dateStr);
+  const day   = d.getUTCDate();
+  const month = d.toLocaleDateString("en-IN", { month: "long", timeZone: "UTC" });
+  speak("Next date " + day + " " + month);
 }
 
 // ===================== Storage Display =====================
 async function updateStorageUsage() {
-    try {
-        if (navigator.storage && navigator.storage.estimate) {
-            const est    = await navigator.storage.estimate();
-            const usedMB = (est.usage  / 1048576).toFixed(2);
-            const totMB  = (est.quota  / 1048576).toFixed(0);
-            const pct    = ((est.usage / est.quota) * 100).toFixed(1);
-            storageUsage.innerText = usedMB + "MB / " + totMB + "MB (" + pct + "%)";
-        } else {
-            storageUsage.innerText = "IndexedDB";
-        }
-    } catch(e) {
-        storageUsage.innerText = "IndexedDB";
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const est    = await navigator.storage.estimate();
+      const usedMB = (est.usage  / 1048576).toFixed(2);
+      const totMB  = (est.quota  / 1048576).toFixed(0);
+      const pct    = ((est.usage / est.quota) * 100).toFixed(1);
+      storageUsage.innerText = usedMB + "MB / " + totMB + "MB (" + pct + "%)";
+    } else {
+      storageUsage.innerText = "IndexedDB";
     }
+  } catch(e) {
+    storageUsage.innerText = "IndexedDB";
+  }
 }
 
 // ===================== Dashboard =====================
 function updateDashboard() {
-    totalCount.innerText    = currentData.length;
-    sentCount.innerText     = currentData.filter(x => x.sent === "Sent").length;
-    receivedCount.innerText = currentData.filter(x => x.received === "Received").length;
+  totalCount.innerText    = currentData.length;
+  sentCount.innerText     = currentData.filter(x => x.sent     === "Sent").length;
+  receivedCount.innerText = currentData.filter(x => x.received === "Received").length;
 }
 
 // ===================== Versions =====================
 async function loadVersions() {
-    versionSelect.innerHTML = "";
-    const versions = await idbGetVersions(workDate.value);
-    if (versions.length === 0) {
-        versionSelect.innerHTML = '<option value="1">Upload 1</option>';
-        return;
-    }
-    versions.forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v;
-        opt.text  = "Upload " + v;
-        versionSelect.appendChild(opt);
-    });
+  versionSelect.innerHTML = "";
+  const versions = await idbGetVersions(workDate.value);
+  if (versions.length === 0) {
+    versionSelect.innerHTML = '<option value="1">Upload 1</option>';
+    return;
+  }
+  versions.forEach(v => {
+    const opt   = document.createElement("option");
+    opt.value   = v;
+    opt.text    = "Upload " + v;
+    versionSelect.appendChild(opt);
+  });
 }
 
 async function saveCurrentVersion() {
-    await idbSetMeta('current_version_' + workDate.value, uploadVersion);
+  await idbSetMeta('current_version_' + workDate.value, uploadVersion);
 }
 
 async function loadCurrentVersion() {
-    const v       = await idbGetMeta('current_version_' + workDate.value);
-    uploadVersion = parseInt(v) || 1;
-    versionSelect.value = uploadVersion;
+  const v       = await idbGetMeta('current_version_' + workDate.value);
+  uploadVersion = parseInt(v) || 1;
+  versionSelect.value = uploadVersion;
 }
 
 // ===================== Local Save / Load =====================
 async function saveLocal() {
-    try {
-        await idbSetMeta(dataKey(), currentData);
-        updateStorageUsage();
-    } catch(e) {
-        console.error("Save error:", e);
-    }
+  try {
+    await idbSetMeta(dataKey(), currentData);
+    updateStorageUsage();
+  } catch(e) {
+    console.error("Save error:", e);
+  }
 }
 
 async function loadLocal() {
-    try {
-        const saved = await idbGetMeta(dataKey());
-        if (saved && Array.isArray(saved)) {
-            currentData = saved;
-            currentData.forEach(r => r.searchableText = generateSearchableText(r));
-        } else {
-            currentData = [];
-        }
-    } catch(e) {
-        console.error("Load error:", e);
-        currentData = [];
+  try {
+    const saved = await idbGetMeta(dataKey());
+    if (saved && Array.isArray(saved)) {
+      currentData = saved;
+      currentData.forEach(r => r.searchableText = generateSearchableText(r));
+    } else {
+      currentData = [];
     }
-    drawTable(getFilteredData());
-    updateDashboard();
+  } catch(e) {
+    console.error("Load error:", e);
+    currentData = [];
+  }
+  drawTable(getFilteredData());
+  updateDashboard();
 }
 
 // ===================== Date / Version Events =====================
 workDate.addEventListener("change", async () => {
-    localStorage.setItem('lastWorkDate', workDate.value);
-    await loadVersions();
-    await loadCurrentVersion();
-    await loadLocal();
+  localStorage.setItem('lastWorkDate', workDate.value);
+  await loadVersions();
+  await loadCurrentVersion();
+  await loadLocal();
 });
 
 versionSelect.addEventListener("change", async () => {
-    uploadVersion = parseInt(versionSelect.value);
-    await saveCurrentVersion();
-    await loadLocal();
+  uploadVersion = parseInt(versionSelect.value);
+  await saveCurrentVersion();
+  await loadLocal();
 });
 
 // ===================== Excel Upload =====================
 async function uploadExcel() {
-    const file = excelFile.files[0];
-    if (!file) { alert("Excel file select karo"); return; }
+  const file = excelFile.files[0];
+  if (!file) { alert("Excel file select karo"); return; }
 
-    try {
-        const versions = await idbGetVersions(workDate.value);
-        uploadVersion  = versions.length + 1;
+  try {
+    const versions = await idbGetVersions(workDate.value);
+    uploadVersion  = versions.length + 1;
 
-        const reader   = new FileReader();
-        reader.onerror = () => alert("File read error.");
-        reader.onload  = async e => {
-            try {
-                const wb    = XLSX.read(e.target.result, { type: "binary" });
-                const sheet = wb.Sheets[wb.SheetNames[0]];
-                let rows    = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    const reader   = new FileReader();
+    reader.onerror = () => alert("File read error.");
+    reader.onload  = async e => {
+      try {
+        const wb    = XLSX.read(e.target.result, { type: "binary" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        let rows    = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-                if (rows.length > 0) rows.shift();
+        if (rows.length > 0) rows.shift();
 
-                currentData = rows
-                    .map(r => {
-                        const rec = {
-                            srno:         r[0] || "",
-                            caseno:       String(r[1] || "").trim(),
-                            partyname:    r[2] || "",
-                            section:      r[3] || "",
-                            ps:           r[4] || "",
-                            sent:         "",
-                            received:     "",
-                            receiveddate: "",
-                            nextdate:     "",
-                            remark:       ""
-                        };
-                        rec.searchableText = generateSearchableText(rec);
-                        return rec;
-                    })
-                    .filter(r => r.caseno !== "");
+        currentData = rows
+          .map(r => {
+            const rec = {
+              srno:         r[0] || "",
+              caseno:       String(r[1] || "").trim(),
+              partyname:    r[2] || "",
+              section:      r[3] || "",
+              ps:           r[4] || "",
+              sent:         "",
+              received:     "",
+              receiveddate: "",
+              nextdate:     "",
+              remark:       ""
+            };
+            rec.searchableText = generateSearchableText(rec);
+            return rec;
+          })
+          .filter(r => r.caseno !== "");
 
-                const opt = document.createElement("option");
-                opt.value = uploadVersion;
-                opt.text  = "Upload " + uploadVersion;
-                versionSelect.appendChild(opt);
-                versionSelect.value = uploadVersion;
+        const opt   = document.createElement("option");
+        opt.value   = uploadVersion;
+        opt.text    = "Upload " + uploadVersion;
+        versionSelect.appendChild(opt);
+        versionSelect.value = uploadVersion;
 
-                versions.push(uploadVersion);
-                await idbSaveVersions(workDate.value, versions);
-                await saveCurrentVersion();
-                await saveLocal();
+        versions.push(uploadVersion);
+        await idbSaveVersions(workDate.value, versions);
+        await saveCurrentVersion();
+        await saveLocal();
 
-                drawTable(getFilteredData());
-                updateDashboard();
-                speak("Excel uploaded");
-                alert("Excel upload ho gaya! (" + currentData.length + " records)");
-                excelFile.value = "";
-            } catch(err) {
-                console.error("Excel error:", err);
-                alert("Excel process karne mein error: " + err.message);
-            }
-        };
-        reader.readAsBinaryString(file);
-    } catch(err) {
-        console.error("Upload error:", err);
-        alert("Upload fail hua.");
-    }
+        drawTable(getFilteredData());
+        updateDashboard();
+        speak("Excel uploaded");
+        alert("Excel upload ho gaya! (" + currentData.length + " records)");
+        excelFile.value = "";
+      } catch(err) {
+        console.error("Excel error:", err);
+        alert("Excel process karne mein error: " + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  } catch(err) {
+    console.error("Upload error:", err);
+    alert("Upload fail hua.");
+  }
 }
 
 // ===================== Filter =====================
 function getFilteredData() {
-    const q = searchBox.value.trim().toLowerCase();
-    return q
-        ? currentData.filter(r => r.searchableText && r.searchableText.includes(q))
-        : currentData;
+  const q = searchBox.value.trim().toLowerCase();
+  return q
+    ? currentData.filter(r => r.searchableText && r.searchableText.includes(q))
+    : currentData;
 }
 
-// ===================== Scanner ====================
-      function scanSent()     { scanMode = "SENT";     startScanner(); }
+// ===================== Scanner =====================
+function scanSent()     { scanMode = "SENT";     startScanner(); }
 function scanReceived() { scanMode = "RECEIVED"; startScanner(); }
 
 async function startScanner() {
-    scannerWrap.style.display = "block";
-    html5Qr = new Html5Qrcode("video");
-    try {
-        const devices = await Html5Qrcode.getCameras();
-        if (!devices.length) { alert("Camera nahi mila."); stopScanner(); return; }
-        const cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[devices.length - 1];
-        html5Qr.start(cam.id, { fps: 10, qrbox: 250 }, text => handleScan(text.trim()));
-    } catch(err) {
-        console.error("Scanner error:", err);
-        stopScanner();
-    }
+  scannerWrap.style.display = "block";
+  html5Qr = new Html5Qrcode("video");
+  try {
+    const devices = await Html5Qrcode.getCameras();
+    if (!devices.length) { alert("Camera nahi mila."); stopScanner(); return; }
+    const cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[devices.length - 1];
+    html5Qr.start(cam.id, { fps: 10, qrbox: 250 }, text => handleScan(text.trim()));
+  } catch(err) {
+    console.error("Scanner error:", err);
+    stopScanner();
+  }
 }
 
 function stopScanner() {
-    if (html5Qr) {
-        html5Qr.stop().then(() => html5Qr.clear()).catch(e => console.error(e));
-        html5Qr = null;
-    }
-    scannerWrap.style.display = "none";
+  if (html5Qr) {
+    html5Qr.stop().then(() => html5Qr.clear()).catch(e => console.error(e));
+    html5Qr = null;
+  }
+  scannerWrap.style.display = "none";
 }
 
 async function handleScan(code) {
-    const now = Date.now();
-    if (code === lastScanCode && now - lastScanTime < 1500) return;
-    lastScanCode = code;
-    lastScanTime = now;
+  const now = Date.now();
+  if (code === lastScanCode && now - lastScanTime < 1500) return;
+  lastScanCode = code;
+  lastScanTime = now;
 
-    const idx = currentData.findIndex(r => r.caseno === code);
-    if (idx === -1) { alert("File Not Found: " + code); speak("File not found"); return; }
+  const idx = currentData.findIndex(r => r.caseno === code);
+  if (idx === -1) {
+    alert("File Not Found: " + code);
+    speak("File not found");
+    return;
+  }
 
-    if (scanMode === "SENT") {
-        if (currentData[idx].sent === "Sent") { alert("Already Sent"); speak("Already sent"); return; }
-        currentData[idx].sent = "Sent";
-        currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-        alert("✅ Sent");
-        speak("File sent");
+  if (scanMode === "SENT") {
+    if (currentData[idx].sent === "Sent") {
+      alert("Already Sent");
+      speak("Already sent");
+      return;
     }
+    currentData[idx].sent = "Sent";
+    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+    alert("✅ Sent");
+    speak("File sent");
+  }
 
-    if (scanMode === "RECEIVED") {
-        if (currentData[idx].sent !== "Sent")         { alert("File abhi Sent nahi hua"); speak("File not sent yet"); return; }
-        if (currentData[idx].received === "Received") { alert("Already Received"); speak("Already received"); return; }
-        currentData[idx].received     = "Received";
-        currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
-        lastReceivedIndex             = idx;
-        currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-        alert("✅ Received");
-        speak("File received");
-        nextDatePopup.style.display = "block";
+  if (scanMode === "RECEIVED") {
+    if (currentData[idx].sent !== "Sent") {
+      alert("File abhi Sent nahi hua");
+      speak("File not sent yet");
+      return;
     }
+    if (currentData[idx].received === "Received") {
+      alert("Already Received");
+      speak("Already received");
+      return;
+    }
+    currentData[idx].received     = "Received";
+    currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
+    lastReceivedIndex             = idx;
+    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+    alert("✅ Received");
+    // ✅ FIX 2: Missing semicolon after speak() — caused JS crash
+    speak("File received");
+    nextDatePopup.style.display = "block";
+  }
 
-    searchBox.value = "";
-drawTable(getFilteredData());
-scrollToFile(code);
-updateDashboard();
-await saveLocal();
-
-// NEW LINE
-stopScanner();
+  searchBox.value = "";
+  drawTable(getFilteredData());
+  scrollToFile(code);
+  updateDashboard();
+  await saveLocal();
+  stopScanner();
 }
 
 // ===================== Scroll =====================
 function scrollToFile(caseno) {
-    const row = document.getElementById("row_" + sanitizeId(caseno));
-    if (!row) return;
-    row.scrollIntoView({ behavior: "smooth", block: "center" });
-    row.classList.add("highlight");
-    setTimeout(() => row.classList.remove("highlight"), 3000);
+  const row = document.getElementById("row_" + sanitizeId(caseno));
+  if (!row) return;
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+  row.classList.add("highlight");
+  setTimeout(() => row.classList.remove("highlight"), 3000);
 }
 
 // ===================== Next Date =====================
 async function saveNextDate() {
-    if (lastReceivedIndex === null) return;
-    const selectedDate = nextDateInput.value;
-    if (!selectedDate) { alert("Date select karo"); return; }
-    currentData[lastReceivedIndex].nextdate = selectedDate;
-    currentData[lastReceivedIndex].searchableText = generateSearchableText(currentData[lastReceivedIndex]);
-    nextDateInput.value         = '';
-    nextDatePopup.style.display = "none";
-    lastReceivedIndex           = null;
-    drawTable(getFilteredData());
-    speakNextDate(selectedDate);
-    await saveLocal();
+  if (lastReceivedIndex === null) return;
+  const selectedDate = nextDateInput.value;
+  if (!selectedDate) { alert("Date select karo"); return; }
+  currentData[lastReceivedIndex].nextdate = selectedDate;
+  currentData[lastReceivedIndex].searchableText = generateSearchableText(currentData[lastReceivedIndex]);
+  nextDateInput.value         = '';
+  nextDatePopup.style.display = "none";
+  lastReceivedIndex           = null;
+  drawTable(getFilteredData());
+  speakNextDate(selectedDate);
+  await saveLocal();
 }
 
 function closePopup() {
-    nextDatePopup.style.display = "none";
-    lastReceivedIndex = null;
+  nextDatePopup.style.display = "none";
+  lastReceivedIndex = null;
 }
 
 // ===================== Remark =====================
 async function updateRemark(caseNo, val) {
-    clearTimeout(remarkTimeout);
-    remarkTimeout = setTimeout(async () => {
-        const idx = currentData.findIndex(r => r.caseno === caseNo);
-        if (idx !== -1) {
-            currentData[idx].remark         = val;
-            currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-            await saveLocal();
-        }
-    }, 400);
+  clearTimeout(remarkTimeout);
+  remarkTimeout = setTimeout(async () => {
+    const idx = currentData.findIndex(r => r.caseno === caseNo);
+    if (idx !== -1) {
+      currentData[idx].remark         = val;
+      currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+      await saveLocal();
+    }
+  }, 400);
 }
 
 // ===================== Table =====================
 function drawTable(data) {
-    if (!data || !data.length) { table.innerHTML = ""; return; }
+  if (!data || !data.length) { table.innerHTML = ""; return; }
 
-    const HEADERS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
-    const LABELS  = ["Sr.No","Case No","Party Name","Section","PS","Sent","Received","Recv. Date","Next Date","Remark"];
+  const HEADERS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
+  const LABELS  = ["Sr.No","Case No","Party Name","Section","PS","Sent","Received","Recv. Date","Next Date","Remark"];
 
-    let html = "<tr>" + LABELS.map(x => "<th>" + x + "</th>").join("") + "</tr>";
+  let html = "<tr>" + LABELS.map(x => "<th>" + x + "</th>").join("") + "</tr>";
 
-    data.forEach(r => {
-        let row = '<tr id="row_' + sanitizeId(r.caseno) + '">';
-        HEADERS.forEach(k => {
-            if (k === "remark") {
-                const casenoAttr = String(r.caseno).replace(/"/g, '&quot;');
-                const casenoJs   = String(r.caseno).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                const valAttr    = String(r[k] || "").replace(/"/g, '&quot;');
-                row += '<td><input data-caseno="' + casenoAttr + '" value="' + valAttr + '" oninput="updateRemark(\'' + casenoJs + '\',this.value)" placeholder="Add remark..."></td>';
-            } else {
-    if (k === "sent" && r.sent === "Sent") {
-        row += '<td style="background:#fff3cd">' + r[k] + '</td>';
-    } 
-    else if (k === "received" && r.received === "Received") {
-        row += '<td style="background:#c8e6c9">' + r[k] + '</td>';
-    } 
-    else {
+  data.forEach(r => {
+    let row = '<tr id="row_' + sanitizeId(r.caseno) + '">';
+    HEADERS.forEach(k => {
+      if (k === "remark") {
+        const casenoAttr = String(r.caseno).replace(/"/g, '&quot;');
+        const casenoJs   = String(r.caseno).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const valAttr    = String(r[k] || "").replace(/"/g, '&quot;');
+        row += '<td><input data-caseno="' + casenoAttr + '" value="' + valAttr
+             + '" oninput="updateRemark(\'' + casenoJs + '\',this.value)" placeholder="Add remark..."></td>';
+      } else if (k === "sent" && r.sent === "Sent") {
+        row += '<td style="background:#fff3cd">' + (r[k] || "") + '</td>';
+      } else if (k === "received" && r.received === "Received") {
+        row += '<td style="background:#c8e6c9">' + (r[k] || "") + '</td>';
+      } else {
         row += '<td>' + (r[k] || "") + '</td>';
-    }
-}
-        });
-        row += "</tr>";
-        html += row;
+      }
     });
+    row += "</tr>";
+    html += row;
+  });
 
-    table.innerHTML = html;
-  
-setTimeout(() => {
+  table.innerHTML = html;
 
-    let active = document.activeElement;
-    let activeCase = active?.dataset?.caseno;
-    let cursorPos = active?.selectionStart;
+  // ✅ FIX 3: Safer cursor-restore — only focus active remark input, others just sync value
+  setTimeout(() => {
+    const active     = document.activeElement;
+    const activeCase = active && active.dataset && active.dataset.caseno
+                       ? active.dataset.caseno : null;
+    const cursorPos  = activeCase ? active.selectionStart : null;
 
     document.querySelectorAll('input[data-caseno]').forEach(input => {
-
-        const rec = currentData.find(r => r.caseno === input.dataset.caseno);
-
-        if (!rec) return;
-
-        // Agar ye same active input hai
-        if (activeCase && input.dataset.caseno === activeCase) {
-            input.value = rec.remark || "";
-
-            // Cursor restore karo
-            if (cursorPos != null) {
-                input.setSelectionRange(cursorPos, cursorPos);
-            }
-
-            input.focus();
-        } 
-        else {
-            input.value = rec.remark || "";
+      const rec = currentData.find(r => r.caseno === input.dataset.caseno);
+      if (!rec) return;
+      // ✅ Only restore focus + cursor if this was the ACTIVE input; don't focus others
+      if (activeCase && input.dataset.caseno === activeCase) {
+        if (input.value !== rec.remark) input.value = rec.remark || "";
+        if (cursorPos != null) {
+          try { input.setSelectionRange(cursorPos, cursorPos); } catch(e) {}
         }
-
+        input.focus();
+      } else {
+        input.value = rec.remark || "";
+      }
     });
+  }, 0);
+}
 
-}, 0);}
 // ===================== Search =====================
 searchBox.addEventListener("input", () => drawTable(getFilteredData()));
 
 // ===================== Download Excel =====================
 function downloadExcel() {
-    if (!currentData.length) { alert("Data nahi hai download karne ke liye."); return; }
-    const exportData = currentData.map(r => ({
-       "Sr.No":      r.srno,
-        "Case No":    r.caseno,
-        "Party Name": r.partyname,
-        "Section":    r.section,
-        "PS":         r.ps,
-        "Sent":       r.sent,
-        "Received":   r.received,
-        "Recv. Date": r.receiveddate,
-        "Next Date":  r.nextdate,
-        "Remark":     r.remark
-    }));
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Court Data");
-    XLSX.writeFile(wb, "Court_" + workDate.value + "_v" + uploadVersion + ".xlsx");
+  if (!currentData.length) { alert("Data nahi hai download karne ke liye."); return; }
+  const exportData = currentData.map(r => ({
+    "Sr.No":      r.srno,
+    "Case No":    r.caseno,
+    "Party Name": r.partyname,
+    "Section":    r.section,
+    "PS":         r.ps,
+    "Sent":       r.sent,
+    "Received":   r.received,
+    "Recv. Date": r.receiveddate,
+    "Next Date":  r.nextdate,
+    "Remark":     r.remark
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Court Data");
+  XLSX.writeFile(wb, "Court_" + workDate.value + "_v" + uploadVersion + ".xlsx");
 }
 
 // ===================== Delete Old Data =====================
+// ✅ FIX 4: Separate transactions for metadata and versions stores
+//    (single getStore() call per operation — reusing across async boundaries crashes)
 async function deleteOldData() {
-    if (!confirm("30 din se purana data delete karein?")) return;
+  if (!confirm("30 din se purana data delete karein?")) return;
 
-    const today = new Date();
-    let count   = 0;
+  const today = new Date();
+  let count   = 0;
 
-    try {
-        const metaStore = await getStore(STORE_METADATA, 'readwrite');
-        const metaKeys  = await new Promise((res, rej) => {
-            const r = metaStore.getAllKeys();
-            r.onsuccess = () => res(r.result);
-            r.onerror   = e => rej(e.target.error);
-        });
+  try {
+    // --- Metadata keys ---
+    const metaKeys = await new Promise(async (resolve, reject) => {
+      const store = await getStore(STORE_METADATA, 'readonly');
+      const r = store.getAllKeys();
+      r.onsuccess = () => resolve(r.result);
+      r.onerror   = e => reject(e.target.error);
+    });
 
-        for (const key of metaKeys) {
-            if (key.startsWith('current_version_')) continue;
-            const datePart = key.substring(0, 10);
-            const fileDate = new Date(datePart);
-            if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
-                await idbDelMeta(key);
-                count++;
-            }
-        }
-
-        const verStore = await getStore(STORE_VERSIONS, 'readwrite');
-        const allDates = await new Promise((res, rej) => {
-            const r = verStore.getAllKeys();
-            r.onsuccess = () => res(r.result);
-            r.onerror   = e => rej(e.target.error);
-        });
-
-        for (const dateKey of allDates) {
-            const fileDate = new Date(dateKey);
-            if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
-                await new Promise((res, rej) => {
-                    const r = verStore.delete(dateKey);
-                    r.onsuccess = () => res();
-                    r.onerror   = e => rej(e.target.error);
-                });
-            }
-        }
-
-        alert(count + " purane records delete ho gaye.");
-        updateStorageUsage();
-    } catch(err) {
-        console.error("Delete error:", err);
-        alert("Delete fail hua.");
+    for (const key of metaKeys) {
+      if (key.startsWith('current_version_')) continue;
+      const datePart = key.substring(0, 10);
+      const fileDate = new Date(datePart);
+      if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
+        await idbDelMeta(key);   // idbDelMeta opens its own fresh transaction
+        count++;
+      }
     }
+
+    // --- Version keys ---
+    const allDates = await new Promise(async (resolve, reject) => {
+      const store = await getStore(STORE_VERSIONS, 'readonly');
+      const r = store.getAllKeys();
+      r.onsuccess = () => resolve(r.result);
+      r.onerror   = e => reject(e.target.error);
+    });
+
+    for (const dateKey of allDates) {
+      const fileDate = new Date(dateKey);
+      if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
+        await idbSaveVersions(dateKey, null).catch(() => {});   // soft ignore
+        // Delete via fresh transaction
+        await new Promise(async (resolve, reject) => {
+          const store = await getStore(STORE_VERSIONS, 'readwrite');
+          const r = store.delete(dateKey);
+          r.onsuccess = () => resolve();
+          r.onerror   = e => reject(e.target.error);
+        });
+      }
+    }
+
+    alert(count + " purane records delete ho gaye.");
+    updateStorageUsage();
+  } catch(err) {
+    console.error("Delete error:", err);
+    alert("Delete fail hua.");
+  }
 }
 </script>
 </body>

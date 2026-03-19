@@ -777,8 +777,16 @@ function drawTable(data) {
                 const valAttr    = String(r[k] || "").replace(/"/g, '&quot;');
                 row += '<td><input data-caseno="' + casenoAttr + '" value="' + valAttr + '" oninput="updateRemark(\'' + casenoJs + '\',this.value)" placeholder="Add remark..."></td>';
             } else {
-                row += '<td>' + (r[k] || "") + '</td>';
-            }
+    if (k === "sent" && r.sent === "Sent") {
+        row += '<td style="background:#fff3cd">' + r[k] + '</td>';
+    } 
+    else if (k === "received" && r.received === "Received") {
+        row += '<td style="background:#c8e6c9">' + r[k] + '</td>';
+    } 
+    else {
+        row += '<td>' + (r[k] || "") + '</td>';
+    }
+}
         });
         row += "</tr>";
         html += row;

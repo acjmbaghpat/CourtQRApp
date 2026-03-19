@@ -289,6 +289,96 @@ tr:hover         { background-color: #f8fafc; }
   width: 150px;
   box-shadow: 0 6px 15px rgba(0,0,0,0.2);
 }
+
+/* ---- Manual Entry ---- */
+.manual-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.manual-action-grid button {
+  margin-top: 0;
+}
+
+.case-dropdown-wrap {
+  position: relative;
+}
+
+#caseDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-md);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 500;
+  box-shadow: var(--shadow-md);
+  display: none;
+}
+
+#caseDropdown .drop-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#caseDropdown .drop-item:last-child { border-bottom: none; }
+
+#caseDropdown .drop-item:hover,
+#caseDropdown .drop-item.active {
+  background: #ede9fe;
+  color: var(--primary);
+}
+
+#caseDropdown .drop-item .drop-caseno {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 15px;
+}
+
+#caseDropdown .drop-item .drop-party {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.manual-status {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: none;
+}
+
+.manual-status.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  display: block;
+}
+
+.manual-status.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  display: block;
+}
+
+.manual-status.info {
+  background: #ede9fe;
+  color: var(--primary);
+  border: 1px solid #c4b5fd;
+  display: block;
+}
 </style>
 </head>
 <body>
@@ -323,6 +413,30 @@ tr:hover         { background-color: #f8fafc; }
 
   <div class="section">
     <h3>📷 Scan Files</h3>
+  </div>
+
+  <!-- Manual Entry Section -->
+  <div class="section">
+    <h3>✍️ Manual Entry</h3>
+
+    <div class="case-dropdown-wrap">
+      <input
+        type="text"
+        id="manualCaseInput"
+        placeholder="Case No likhein ya list se chunein..."
+        autocomplete="off"
+        oninput="onManualInput()"
+        onkeydown="onManualKeyDown(event)"
+      >
+      <div id="caseDropdown"></div>
+    </div>
+
+    <div class="manual-action-grid">
+      <button onclick="manualAction('SENT')"     style="background:#f59e0b;">📤 Mark SENT</button>
+      <button onclick="manualAction('RECEIVED')" style="background:var(--success);">📥 Mark RECEIVED</button>
+    </div>
+
+    <div id="manualStatus" class="manual-status"></div>
   </div>
 
   <div class="section" style="padding:10px;">
@@ -747,6 +861,158 @@ function scrollToFile(caseno) {
   row.scrollIntoView({ behavior: "smooth", block: "center" });
   row.classList.add("highlight");
   setTimeout(() => row.classList.remove("highlight"), 3000);
+}
+
+// ===================== Manual Entry =====================
+let dropdownActiveIndex = -1;
+
+function showManualStatus(msg, type) {
+  const el = document.getElementById("manualStatus");
+  el.textContent  = msg;
+  el.className    = "manual-status " + type;
+  clearTimeout(el._hideTimer);
+  if (type === "success") {
+    el._hideTimer = setTimeout(() => { el.className = "manual-status"; }, 3000);
+  }
+}
+
+function onManualInput() {
+  const val = manualCaseInput.value.trim().toLowerCase();
+  dropdownActiveIndex = -1;
+
+  if (!val || !currentData.length) {
+    closeCaseDropdown();
+    return;
+  }
+
+  // Match case no OR party name
+  const matches = currentData.filter(r =>
+    String(r.caseno).toLowerCase().includes(val) ||
+    String(r.partyname).toLowerCase().includes(val)
+  ).slice(0, 20);
+
+  if (!matches.length) { closeCaseDropdown(); return; }
+
+  const dd = document.getElementById("caseDropdown");
+  dd.innerHTML = matches.map((r, i) =>
+    `<div class="drop-item" data-caseno="${String(r.caseno).replace(/"/g,'&quot;')}"
+          onmousedown="selectDropItem('${String(r.caseno).replace(/'/g,"\\'")}')">
+       <span class="drop-caseno">${r.caseno}</span>
+       <span class="drop-party">${r.partyname || ""} ${r.section ? "| " + r.section : ""}</span>
+     </div>`
+  ).join("");
+  dd.style.display = "block";
+}
+
+function onManualKeyDown(e) {
+  const dd    = document.getElementById("caseDropdown");
+  const items = dd.querySelectorAll(".drop-item");
+  if (!items.length) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    dropdownActiveIndex = Math.min(dropdownActiveIndex + 1, items.length - 1);
+    updateDropHighlight(items);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    dropdownActiveIndex = Math.max(dropdownActiveIndex - 1, 0);
+    updateDropHighlight(items);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (dropdownActiveIndex >= 0 && items[dropdownActiveIndex]) {
+      const cn = items[dropdownActiveIndex].dataset.caseno;
+      selectDropItem(cn);
+    }
+  } else if (e.key === "Escape") {
+    closeCaseDropdown();
+  }
+}
+
+function updateDropHighlight(items) {
+  items.forEach((el, i) => {
+    el.classList.toggle("active", i === dropdownActiveIndex);
+    if (i === dropdownActiveIndex) el.scrollIntoView({ block: "nearest" });
+  });
+}
+
+function selectDropItem(caseno) {
+  manualCaseInput.value = caseno;
+  closeCaseDropdown();
+  document.getElementById("manualStatus").className = "manual-status"; // clear
+}
+
+function closeCaseDropdown() {
+  document.getElementById("caseDropdown").style.display = "none";
+  dropdownActiveIndex = -1;
+}
+
+// Close dropdown on outside click
+document.addEventListener("click", e => {
+  if (!e.target.closest(".case-dropdown-wrap")) closeCaseDropdown();
+});
+
+async function manualAction(mode) {
+  const caseNo = manualCaseInput.value.trim();
+
+  if (!caseNo) {
+    showManualStatus("⚠️ Pehle Case No enter karo.", "error");
+    return;
+  }
+
+  if (!currentData.length) {
+    showManualStatus("⚠️ Koi data nahi hai. Pehle Excel upload karo.", "error");
+    return;
+  }
+
+  const idx = currentData.findIndex(r => String(r.caseno).trim() === caseNo);
+
+  if (idx === -1) {
+    showManualStatus("❌ Case Not Found: " + caseNo, "error");
+    speak("Case not found");
+    return;
+  }
+
+  const rec = currentData[idx];
+
+  if (mode === "SENT") {
+    if (rec.sent === "Sent") {
+      showManualStatus("ℹ️ Yeh file pehle se SENT hai: " + caseNo, "info");
+      speak("Already sent");
+      return;
+    }
+    currentData[idx].sent = "Sent";
+    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+    showManualStatus("✅ SENT ho gaya: " + caseNo, "success");
+    speak("File sent");
+    manualCaseInput.value = "";
+
+  } else if (mode === "RECEIVED") {
+    // Error: received before sent
+    if (rec.sent !== "Sent") {
+      showManualStatus("❌ Error: Yeh file abhi SENT nahi hua hai. Pehle SEND karo.", "error");
+      speak("File not sent yet");
+      return;
+    }
+    if (rec.received === "Received") {
+      showManualStatus("ℹ️ Yeh file pehle se RECEIVED hai: " + caseNo, "info");
+      speak("Already received");
+      return;
+    }
+    currentData[idx].received     = "Received";
+    currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
+    lastReceivedIndex             = idx;
+    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+    showManualStatus("✅ RECEIVED ho gaya: " + caseNo, "success");
+    speak("File received");
+    manualCaseInput.value = "";
+    // Open next date popup (same as scan)
+    nextDatePopup.style.display = "block";
+  }
+
+  drawTable(getFilteredData());
+  scrollToFile(caseNo);
+  updateDashboard();
+  await saveLocal();
 }
 
 // ===================== Next Date =====================

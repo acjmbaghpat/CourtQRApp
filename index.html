@@ -282,11 +282,21 @@ tr:hover { background-color: #f8fafc; }
   background: #fef08a !important; /* Yellow highlight */
   animation: pulse 1.5s 2;
 }
+.floating-scan {
+  position: fixed;
+  bottom: 20px;
+  right: 15px;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 999;
+}
 
-@keyframes pulse {
-  0% { background: #fef08a; }
-  50% { background: var(--surface); }
-  100% { background: #fef08a; }
+.floating-scan button {
+  width: 150px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
 }
 </style>
 </head>
@@ -323,7 +333,7 @@ tr:hover { background-color: #f8fafc; }
 
   <div class="section">
     <h3>📷 Scan Files</h3>
-    <div class="scan-grid">
+      <div class="scan-grid floating-scan">
       <button onclick="scanSent()">📤 Scan SENT</button>
       <button onclick="scanReceived()">📥 Scan RECEIVED</button>
     </div>

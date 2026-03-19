@@ -335,11 +335,6 @@ tr:hover { background-color: #f8fafc; }
 </div>
 
 <!-- FLOATING BUTTONS (OUTSIDE SECTION) -->
-<div class="floating-scan">
-  <button onclick="scanSent()">📤 Scan SENT</button>
-  <button onclick="scanReceived()">📥 Scan RECEIVED</button>
-</div>
-
 
   <div class="section" style="padding: 10px;">
     <button onclick="downloadExcel()" style="margin-top: 0; background: var(--success);">📊 Download Excel Report</button>
@@ -366,6 +361,10 @@ tr:hover { background-color: #f8fafc; }
     <input type="date" id="nextDateInput">
     <button onclick="saveNextDate()" style="background: var(--success);">✅ Save Date</button>
     <button onclick="closePopup()" style="background: var(--text-muted); margin-top: 12px;">Cancel</button>
+  </div>
+  <div class="floating-scan">
+  <button onclick="scanSent()">📤 Scan SENT</button>
+  <button onclick="scanReceived()">📥 Scan RECEIVED</button>
   </div>
 </div>
 <script>

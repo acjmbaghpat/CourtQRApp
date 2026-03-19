@@ -335,10 +335,6 @@ tr:hover { background-color: #f8fafc; }
 </div>
 
 <!-- FLOATING BUTTONS (OUTSIDE SECTION) -->
-<div class="floating-scan">
-  <button onclick="scanSent()">📤 Scan SENT</button>
-  <button onclick="scanReceived()">📥 Scan RECEIVED</button>
-</div>
   <div class="section" style="padding: 10px;">
     <button onclick="downloadExcel()" style="margin-top: 0; background: var(--success);">📊 Download Excel Report</button>
   </div>
@@ -352,7 +348,10 @@ tr:hover { background-color: #f8fafc; }
     <button onclick="deleteOldData()" class="btn-danger">🧹 Delete Data Older Than 30 Days</button>
   </div>
 </div>
-
+<div class="floating-scan">
+  <button onclick="scanSent()">📤 Scan SENT</button>
+  <button onclick="scanReceived()">📥 Scan RECEIVED</button>
+</div>
 <div id="scannerWrap">
   <div id="video"></div>
   <button onclick="stopScanner()">❌ Close Scanner</button>

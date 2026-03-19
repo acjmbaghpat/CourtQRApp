@@ -808,20 +808,37 @@ function drawTable(data) {
     });
 
     table.innerHTML = html;
-  setTimeout(() => {
+  
+setTimeout(() => {
+
+    let active = document.activeElement;
+    let activeCase = active?.dataset?.caseno;
+    let cursorPos = active?.selectionStart;
+
     document.querySelectorAll('input[data-caseno]').forEach(input => {
 
         const rec = currentData.find(r => r.caseno === input.dataset.caseno);
 
-        // Agar ye input currently active nahi hai
-        if (rec && document.activeElement !== input) {
+        if (!rec) return;
+
+        // Agar ye same active input hai
+        if (activeCase && input.dataset.caseno === activeCase) {
+            input.value = rec.remark || "";
+
+            // Cursor restore karo
+            if (cursorPos != null) {
+                input.setSelectionRange(cursorPos, cursorPos);
+            }
+
+            input.focus();
+        } 
+        else {
             input.value = rec.remark || "";
         }
 
     });
-}, 0);
-}
 
+}, 0);
 // ===================== Search =====================
 searchBox.addEventListener("input", () => drawTable(getFilteredData()));
 

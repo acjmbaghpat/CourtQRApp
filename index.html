@@ -711,10 +711,13 @@ async function handleScan(code) {
     }
 
     searchBox.value = "";
-    drawTable(getFilteredData());
-    scrollToFile(code);
-    updateDashboard();
-    await saveLocal();
+drawTable(getFilteredData());
+scrollToFile(code);
+updateDashboard();
+await saveLocal();
+
+// NEW LINE
+stopScanner();
 }
 
 // ===================== Scroll =====================

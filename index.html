@@ -404,6 +404,29 @@ tr:hover         { background-color: #f8fafc; }
   border: 1px solid #c4b5fd;
   display: block;
 }
+
+/* ===================== Backup Section ===================== */
+.backup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.backup-grid button { margin-top: 0; }
+
+.btn-purple       { background: #7c3aed; }
+.btn-purple:hover { background: #6d28d9; }
+
+.btn-purple-outline {
+  background: transparent;
+  border: 2px solid #7c3aed;
+  color: #7c3aed;
+  box-shadow: none;
+}
+.btn-purple-outline:hover {
+  background: #ede9fe;
+  color: #6d28d9;
+}
 </style>
 </head>
 <body>
@@ -440,14 +463,6 @@ tr:hover         { background-color: #f8fafc; }
     <input type="text" id="searchBox" placeholder="Search by Case No, Party Name...">
   </div>
 
-  <!-- Scan placeholder (floating buttons handle actual scan) -->
-  <div class="section">
-    <h3>📷 Scan Files</h3>
-    <p style="margin:0; font-size:14px; color:var(--text-muted);">
-      Neeche right corner mein floating buttons se scan karein. Ek scan ke baad scanner apne aap band ho jaata hai.
-    </p>
-  </div>
-
   <!-- Manual Entry -->
   <div class="section">
     <h3>✍️ Manual Entry</h3>
@@ -477,6 +492,20 @@ tr:hover         { background-color: #f8fafc; }
   <!-- Table -->
   <div class="table-wrap">
     <table id="table"></table>
+  </div>
+
+  <!-- Backup & Restore -->
+  <div class="section" style="border-color:#7c3aed; background:#faf5ff;">
+    <h3 style="color:#7c3aed;">🗄️ Backup &amp; Restore</h3>
+    <p style="margin:0 0 12px; font-size:13px; color:var(--text-muted);">
+      Poora data (saari dates, saare versions) ek JSON file mein export karo. Wahi file se wapas restore bhi kar sakte ho.
+    </p>
+    <div class="backup-grid">
+      <button class="btn-purple" onclick="exportBackup()">⬇️ Export Backup</button>
+      <button class="btn-purple-outline" onclick="document.getElementById('restoreFile').click()">⬆️ Restore Backup</button>
+    </div>
+    <input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="importBackup(event)">
+    <div id="backupStatus" class="manual-status"></div>
   </div>
 
   <!-- Danger Zone -->
@@ -1207,7 +1236,107 @@ async function deleteOldData() {
     alert("Delete fail hua.");
   }
 }
+
+// ===================== Backup — Export =====================
+async function exportBackup() {
+  const statusEl = document.getElementById("backupStatus");
+  try {
+    // Collect all version records
+    const allVersionKeys = await idbGetAllVersionKeys();
+    const versionsData   = {};
+    for (const dateKey of allVersionKeys) {
+      const result = await idbTx(STORE_VERSIONS, 'readonly', s => s.get(dateKey));
+      if (result) versionsData[dateKey] = result.versions;
+    }
+
+    // Collect all metadata records (skip nothing — includes data + current_version keys)
+    const allMetaKeys = await idbGetAllMetaKeys();
+    const metaData    = {};
+    for (const key of allMetaKeys) {
+      const val = await idbGetMeta(key);
+      if (val !== null) metaData[key] = val;
+    }
+
+    const backup = {
+      exportedAt:   new Date().toISOString(),
+      appVersion:   "1.0",
+      versionsStore: versionsData,
+      metadataStore: metaData
+    };
+
+    const json     = JSON.stringify(backup, null, 2);
+    const blob     = new Blob([json], { type: "application/json" });
+    const url      = URL.createObjectURL(blob);
+    const a        = document.createElement("a");
+    const dateStr  = new Date().toISOString().split("T")[0];
+    a.href         = url;
+    a.download     = "CourtFileManager_Backup_" + dateStr + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    statusEl.textContent = "✅ Backup export ho gaya!";
+    statusEl.className   = "manual-status success";
+    clearTimeout(statusEl._timer);
+    statusEl._timer = setTimeout(() => { statusEl.className = "manual-status"; }, 3000);
+
+  } catch(err) {
+    console.error("Export error:", err);
+    statusEl.textContent = "❌ Export fail hua: " + err;
+    statusEl.className   = "manual-status error";
+  }
+}
+
+// ===================== Backup — Import / Restore =====================
+async function importBackup(event) {
+  const statusEl = document.getElementById("backupStatus");
+  const file     = event.target.files[0];
+  event.target.value = ""; // reset so same file can be picked again
+  if (!file) return;
+
+  if (!confirm("⚠️ Restore karne se SAARA existing data replace ho jaayega.\nKya aap sure hain?")) return;
+
+  const reader      = new FileReader();
+  reader.onerror    = () => {
+    statusEl.textContent = "❌ File read error.";
+    statusEl.className   = "manual-status error";
+  };
+  reader.onload = async e => {
+    try {
+      const backup = JSON.parse(e.target.result);
+
+      // Basic validation
+      if (!backup.versionsStore || !backup.metadataStore) {
+        statusEl.textContent = "❌ Invalid backup file.";
+        statusEl.className   = "manual-status error";
+        return;
+      }
+
+      // ── Restore versions store ──
+      for (const [dateKey, versions] of Object.entries(backup.versionsStore)) {
+        await idbTx(STORE_VERSIONS, 'readwrite', s => s.put({ workDate: dateKey, versions }));
+      }
+
+      // ── Restore metadata store ──
+      for (const [key, value] of Object.entries(backup.metadataStore)) {
+        await idbSetMeta(key, value);
+      }
+
+      statusEl.textContent = "✅ Restore ho gaya! App reload ho rahi hai...";
+      statusEl.className   = "manual-status success";
+
+      // Reload app to reflect restored data
+      setTimeout(() => location.reload(), 1500);
+
+    } catch(err) {
+      console.error("Import error:", err);
+      statusEl.textContent = "❌ Restore fail hua: " + err.message;
+      statusEl.className   = "manual-status error";
+    }
+  };
+  reader.readAsText(file);
+}
 </script>
 </body>
 </html>
-      

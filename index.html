@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Court File Manager</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -720,7 +720,9 @@ async function loadCurrentVersion() {
 async function saveLocal() {
   try {
     await idbSetMeta(dataKey(), currentData);
-    updateStorageUsage();
+    // Note: updateStorageUsage() intentionally NOT called here —
+    // calling it on every save (including remark keystrokes) adds unnecessary overhead.
+    // It is called explicitly after upload and delete operations only.
   } catch(e) {
     console.error("Save error:", e);
   }
@@ -1019,31 +1021,38 @@ function drawTable(data) {
 
   table.innerHTML = html;
 
-  // Restore cursor position in whichever remark input was active
+  // O(1) lookup via Map instead of O(n²) find() inside forEach
   setTimeout(() => {
     const active     = document.activeElement;
     const activeCase = (active && active.dataset && active.dataset.caseno)
                        ? active.dataset.caseno : null;
     const cursorPos  = activeCase ? active.selectionStart : null;
 
+    // Build a quick lookup map once — O(n) instead of O(n²)
+    const remarkMap = new Map(currentData.map(r => [r.caseno, r.remark || ""]));
+
     document.querySelectorAll('input[data-caseno]').forEach(input => {
-      const rec = currentData.find(r => r.caseno === input.dataset.caseno);
-      if (!rec) return;
+      const remark = remarkMap.get(input.dataset.caseno);
+      if (remark === undefined) return;
       if (activeCase && input.dataset.caseno === activeCase) {
-        if (input.value !== (rec.remark || "")) input.value = rec.remark || "";
+        if (input.value !== remark) input.value = remark;
         if (cursorPos != null) {
           try { input.setSelectionRange(cursorPos, cursorPos); } catch(e) {}
         }
         input.focus();
       } else {
-        input.value = rec.remark || "";
+        input.value = remark;
       }
     });
   }, 0);
 }
 
-// ===================== Search =====================
-searchBox.addEventListener("input", () => drawTable(getFilteredData()));
+// ===================== Search (debounced 150ms) =====================
+let searchDebounce;
+searchBox.addEventListener("input", () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => drawTable(getFilteredData()), 150);
+});
 
 // ===================== Manual Entry =====================
 function showManualStatus(msg, type) {

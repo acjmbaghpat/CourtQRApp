@@ -7,31 +7,37 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+/* ===================== Variables ===================== */
 :root {
-  --primary: #4f46e5;
+  --primary:       #4f46e5;
   --primary-hover: #4338ca;
-  --bg-color: #f8fafc;
-  --surface: #ffffff;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --danger: #ef4444;
-  --success: #10b981;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --bg-color:      #f8fafc;
+  --surface:       #ffffff;
+  --text-main:     #1e293b;
+  --text-muted:    #64748b;
+  --border:        #e2e8f0;
+  --danger:        #ef4444;
+  --danger-hover:  #dc2626;
+  --success:       #10b981;
+  --success-hover: #059669;
+  --amber:         #f59e0b;
+  --amber-hover:   #d97706;
+  --radius-lg:     16px;
+  --radius-md:     12px;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md:     0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
 }
 
+/* ===================== Base ===================== */
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
-  margin: 0;
-  padding: 0;
+  margin: 0; padding: 0;
   -webkit-font-smoothing: antialiased;
 }
 
+/* ===================== Header ===================== */
 .app-header {
   background: var(--primary);
   color: white;
@@ -46,6 +52,7 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* ===================== Layout ===================== */
 .container {
   padding: 16px;
   max-width: 1000px;
@@ -71,6 +78,7 @@ h3 {
   gap: 8px;
 }
 
+/* ===================== Inputs ===================== */
 input, select {
   width: 100%;
   padding: 14px 16px;
@@ -88,7 +96,7 @@ input, select {
 input:focus, select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
   background-color: var(--surface);
 }
 
@@ -97,6 +105,7 @@ input[type="file"] {
   background: var(--surface);
 }
 
+/* ===================== Buttons ===================== */
 button {
   width: 100%;
   padding: 14px 16px;
@@ -116,18 +125,26 @@ button {
   gap: 8px;
 }
 
-button:active  { transform: scale(0.98); }
-button:hover   { background: var(--primary-hover); }
+button:active { transform: scale(0.98); }
 
-.btn-danger         { background: var(--danger); }
-.btn-danger:hover   { background: #dc2626; }
-
-.scan-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* Default hover — only for primary buttons */
+button:not(.btn-danger):not(.btn-success):not(.btn-amber):not(.btn-grey):hover {
+  background: var(--primary-hover);
 }
 
+.btn-danger          { background: var(--danger); }
+.btn-danger:hover    { background: var(--danger-hover); }
+
+.btn-success         { background: var(--success); }
+.btn-success:hover   { background: var(--success-hover); }
+
+.btn-amber           { background: var(--amber); }
+.btn-amber:hover     { background: var(--amber-hover); }
+
+.btn-grey            { background: #94a3b8; }
+.btn-grey:hover      { background: #64748b; }
+
+/* ===================== Dashboard ===================== */
 .dashboard {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -161,6 +178,7 @@ button:hover   { background: var(--primary-hover); }
   font-weight: 700;
 }
 
+/* ===================== Table ===================== */
 .table-wrap {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -210,11 +228,11 @@ td input:focus {
 tr:last-child td { border-bottom: none; }
 tr:hover         { background-color: #f8fafc; }
 
-/* ---- Scanner ---- */
+/* ===================== Scanner Overlay ===================== */
 #scannerWrap {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.85);
   backdrop-filter: blur(5px);
   display: none;
   z-index: 999;
@@ -231,13 +249,21 @@ tr:hover         { background-color: #f8fafc; }
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
+#scannerWrap .scan-label {
+  color: white;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
 #scannerWrap button {
   margin-top: 20px;
-  background: var(--danger);
   font-size: 16px;
 }
 
-/* ---- Next Date Popup ---- */
+/* ===================== Next Date Popup ===================== */
 #nextDatePopup {
   position: fixed;
   inset: 0;
@@ -259,7 +285,7 @@ tr:hover         { background-color: #f8fafc; }
   animation: slideUp 0.3s ease-out;
 }
 
-#popupBox h3  { font-size: 17px; margin-bottom: 14px; }
+#popupBox h3    { font-size: 17px; margin-bottom: 14px; }
 #popupBox input { margin-top: 0; }
 
 @keyframes slideUp {
@@ -267,30 +293,35 @@ tr:hover         { background-color: #f8fafc; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---- Highlight ---- */
-.highlight {
-  background: #fef08a !important;
-  animation: pulse 1.5s 2;
+/* ===================== Highlight / Pulse ===================== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
 }
 
-/* ---- Floating Scan Buttons ---- */
+.highlight {
+  background: #fef08a !important;
+  animation: pulse 1s 3;
+}
+
+/* ===================== Floating Scan Buttons ===================== */
 .floating-scan {
   position: fixed;
   bottom: 20px;
   right: 15px;
-  width: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 999;
+  z-index: 998;
 }
 
 .floating-scan button {
-  width: 150px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+  width: 155px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  margin-top: 0;
 }
 
-/* ---- Manual Entry ---- */
+/* ===================== Manual Entry ===================== */
 .manual-action-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -298,19 +329,14 @@ tr:hover         { background-color: #f8fafc; }
   margin-top: 12px;
 }
 
-.manual-action-grid button {
-  margin-top: 0;
-}
+.manual-action-grid button { margin-top: 0; }
 
-.case-dropdown-wrap {
-  position: relative;
-}
+.case-dropdown-wrap { position: relative; }
 
 #caseDropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   background: var(--surface);
   border: 1.5px solid var(--primary);
   border-radius: var(--radius-md);
@@ -322,7 +348,7 @@ tr:hover         { background-color: #f8fafc; }
 }
 
 #caseDropdown .drop-item {
-  padding: 12px 16px;
+  padding: 11px 16px;
   font-size: 14px;
   cursor: pointer;
   border-bottom: 1px solid var(--border);
@@ -336,7 +362,6 @@ tr:hover         { background-color: #f8fafc; }
 #caseDropdown .drop-item:hover,
 #caseDropdown .drop-item.active {
   background: #ede9fe;
-  color: var(--primary);
 }
 
 #caseDropdown .drop-item .drop-caseno {
@@ -387,38 +412,45 @@ tr:hover         { background-color: #f8fafc; }
 
 <div class="container">
 
+  <!-- Date & Version -->
   <div class="section">
     <h3>📅 Working Date &amp; Version</h3>
     <input type="date" id="workDate">
     <select id="versionSelect"></select>
   </div>
 
+  <!-- Dashboard -->
   <div class="dashboard">
     <div class="card">📁 Total<br><span id="totalCount">0</span></div>
     <div class="card">📤 Sent<br><span id="sentCount">0</span></div>
     <div class="card">📥 Received<br><span id="receivedCount">0</span></div>
-    <div class="card">💾 Storage<br><span id="storageUsage" style="font-size:14px;margin-top:4px;">...</span></div>
+    <div class="card">💾 Storage<br><span id="storageUsage" style="font-size:13px;margin-top:4px;">...</span></div>
   </div>
 
+  <!-- Excel Upload -->
   <div class="section">
     <h3>📥 Excel Upload</h3>
     <input type="file" id="excelFile" accept=".xlsx,.xls">
     <button onclick="uploadExcel()">📤 Upload Excel File</button>
   </div>
 
+  <!-- Search -->
   <div class="section">
     <h3>🔍 Search Records</h3>
     <input type="text" id="searchBox" placeholder="Search by Case No, Party Name...">
   </div>
 
+  <!-- Scan placeholder (floating buttons handle actual scan) -->
   <div class="section">
     <h3>📷 Scan Files</h3>
+    <p style="margin:0; font-size:14px; color:var(--text-muted);">
+      Neeche right corner mein floating buttons se scan karein. Ek scan ke baad scanner apne aap band ho jaata hai.
+    </p>
   </div>
 
-  <!-- Manual Entry Section -->
+  <!-- Manual Entry -->
   <div class="section">
     <h3>✍️ Manual Entry</h3>
-
     <div class="case-dropdown-wrap">
       <input
         type="text"
@@ -430,49 +462,51 @@ tr:hover         { background-color: #f8fafc; }
       >
       <div id="caseDropdown"></div>
     </div>
-
     <div class="manual-action-grid">
-      <button onclick="manualAction('SENT')"     style="background:#f59e0b;">📤 Mark SENT</button>
-      <button onclick="manualAction('RECEIVED')" style="background:var(--success);">📥 Mark RECEIVED</button>
+      <button class="btn-amber"   onclick="manualAction('SENT')">📤 Mark SENT</button>
+      <button class="btn-success" onclick="manualAction('RECEIVED')">📥 Mark RECEIVED</button>
     </div>
-
     <div id="manualStatus" class="manual-status"></div>
   </div>
 
-  <div class="section" style="padding:10px;">
-    <button onclick="downloadExcel()" style="margin-top:0; background:var(--success);">📊 Download Excel Report</button>
+  <!-- Download -->
+  <div class="section" style="padding:12px;">
+    <button class="btn-success" onclick="downloadExcel()" style="margin-top:0;">📊 Download Excel Report</button>
   </div>
 
+  <!-- Table -->
   <div class="table-wrap">
     <table id="table"></table>
   </div>
 
+  <!-- Danger Zone -->
   <div class="section" style="border-color:var(--danger); background:#fef2f2;">
     <h3 style="color:var(--danger);">⚠️ Danger Zone</h3>
-    <button onclick="deleteOldData()" class="btn-danger">🧹 Delete Data Older Than 30 Days</button>
+    <button class="btn-danger" onclick="deleteOldData()">🧹 Delete Data Older Than 30 Days</button>
   </div>
 
 </div><!-- /container -->
 
-<!-- Floating scan buttons -->
+<!-- Floating Scan Buttons -->
 <div class="floating-scan">
-  <button onclick="scanSent()">📤 Scan SENT</button>
-  <button onclick="scanReceived()">📥 Scan RECEIVED</button>
+  <button class="btn-amber"   onclick="scanSent()">📤 Scan SENT</button>
+  <button class="btn-success" onclick="scanReceived()">📥 Scan RECEIVED</button>
 </div>
 
-<!-- Scanner overlay -->
+<!-- Scanner Overlay -->
 <div id="scannerWrap">
+  <div class="scan-label" id="scanLabel">📷 Scanning...</div>
   <div id="video"></div>
-  <button onclick="stopScanner()">❌ Close Scanner</button>
+  <button class="btn-danger" onclick="stopScanner()">❌ Close Scanner</button>
 </div>
 
-<!-- ✅ FIX 1: Next Date Popup HTML — was completely missing -->
+<!-- Next Date Popup -->
 <div id="nextDatePopup">
   <div id="popupBox">
     <h3>📅 Next Hearing Date</h3>
     <input type="date" id="nextDateInput">
     <button onclick="saveNextDate()">✅ Save Date</button>
-    <button onclick="closePopup()" style="background:#94a3b8; margin-top:8px;">❌ Skip</button>
+    <button class="btn-grey" onclick="closePopup()" style="margin-top:8px;">❌ Skip</button>
   </div>
 </div>
 
@@ -501,69 +535,63 @@ function openDatabase() {
   });
 }
 
-async function getStore(storeName, mode) {
-  if (!db) await openDatabase();
-  return db.transaction(storeName, mode).objectStore(storeName);
+// Each helper opens its own fresh transaction — no reuse across async boundaries
+function idbTx(storeName, mode, fn) {
+  return new Promise((resolve, reject) => {
+    if (!db) { reject("DB not open"); return; }
+    const tx    = db.transaction(storeName, mode);
+    const store = tx.objectStore(storeName);
+    const req   = fn(store);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = e => reject(e.target.error);
+  });
 }
 
-// ---------- Versions store ----------
 async function idbGetVersions(date) {
-  const store = await getStore(STORE_VERSIONS, 'readonly');
-  return new Promise((resolve, reject) => {
-    const r = store.get(date);
-    r.onsuccess = () => resolve(r.result ? r.result.versions : []);
-    r.onerror   = e => reject(e.target.error);
-  });
+  const result = await idbTx(STORE_VERSIONS, 'readonly', s => s.get(date));
+  return result ? result.versions : [];
 }
 
 async function idbSaveVersions(date, versions) {
-  const store = await getStore(STORE_VERSIONS, 'readwrite');
-  return new Promise((resolve, reject) => {
-    const r = store.put({ workDate: date, versions });
-    r.onsuccess = () => resolve();
-    r.onerror   = e => reject(e.target.error);
-  });
+  await idbTx(STORE_VERSIONS, 'readwrite', s => s.put({ workDate: date, versions }));
 }
 
-// ---------- Metadata store ----------
+async function idbDeleteVersionDate(dateKey) {
+  await idbTx(STORE_VERSIONS, 'readwrite', s => s.delete(dateKey));
+}
+
+async function idbGetAllVersionKeys() {
+  return await idbTx(STORE_VERSIONS, 'readonly', s => s.getAllKeys());
+}
+
 async function idbGetMeta(key) {
-  const store = await getStore(STORE_METADATA, 'readonly');
-  return new Promise((resolve, reject) => {
-    const r = store.get(key);
-    r.onsuccess = () => resolve(r.result ? r.result.value : null);
-    r.onerror   = e => reject(e.target.error);
-  });
+  const result = await idbTx(STORE_METADATA, 'readonly', s => s.get(key));
+  return result ? result.value : null;
 }
 
 async function idbSetMeta(key, value) {
-  const store = await getStore(STORE_METADATA, 'readwrite');
-  return new Promise((resolve, reject) => {
-    const r = store.put({ key, value });
-    r.onsuccess = () => resolve();
-    r.onerror   = e => reject(e.target.error);
-  });
+  await idbTx(STORE_METADATA, 'readwrite', s => s.put({ key, value }));
 }
 
 async function idbDelMeta(key) {
-  const store = await getStore(STORE_METADATA, 'readwrite');
-  return new Promise((resolve, reject) => {
-    const r = store.delete(key);
-    r.onsuccess = () => resolve();
-    r.onerror   = e => reject(e.target.error);
-  });
+  await idbTx(STORE_METADATA, 'readwrite', s => s.delete(key));
 }
 
-// ===================== Constants & State =====================
+async function idbGetAllMetaKeys() {
+  return await idbTx(STORE_METADATA, 'readonly', s => s.getAllKeys());
+}
+
+// ===================== State =====================
 const DATA_KEYS = ["srno","caseno","partyname","section","ps","sent","received","receiveddate","nextdate","remark"];
 
 let currentData       = [];
 let uploadVersion     = 1;
 let scanMode          = "";
 let html5Qr           = null;
+let scannerBusy       = false;   // ← prevents duplicate scan callbacks
 let lastReceivedIndex = null;
-let lastScanCode      = "";
-let lastScanTime      = 0;
 let remarkTimeout;
+let dropdownActiveIndex = -1;
 
 // ===================== Helpers =====================
 function sanitizeId(id) {
@@ -582,8 +610,8 @@ function dataKey() {
 window.onload = async () => {
   try {
     await openDatabase();
-    const savedDate   = localStorage.getItem('lastWorkDate');
-    workDate.value    = savedDate || new Date().toISOString().split("T")[0];
+    const savedDate = localStorage.getItem('lastWorkDate');
+    workDate.value  = savedDate || new Date().toISOString().split("T")[0];
     await loadVersions();
     await loadCurrentVersion();
     await loadLocal();
@@ -593,7 +621,7 @@ window.onload = async () => {
   }
 };
 
-// ===================== Speaker =====================
+// ===================== Speech =====================
 function speak(msg) {
   const s = new SpeechSynthesisUtterance(msg);
   s.lang = "en-IN";
@@ -637,14 +665,14 @@ function updateDashboard() {
 async function loadVersions() {
   versionSelect.innerHTML = "";
   const versions = await idbGetVersions(workDate.value);
-  if (versions.length === 0) {
+  if (!versions || versions.length === 0) {
     versionSelect.innerHTML = '<option value="1">Upload 1</option>';
     return;
   }
   versions.forEach(v => {
-    const opt   = document.createElement("option");
-    opt.value   = v;
-    opt.text    = "Upload " + v;
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.text  = "Upload " + v;
     versionSelect.appendChild(opt);
   });
 }
@@ -707,7 +735,7 @@ async function uploadExcel() {
 
   try {
     const versions = await idbGetVersions(workDate.value);
-    uploadVersion  = versions.length + 1;
+    uploadVersion  = (versions && versions.length > 0 ? versions.length : 0) + 1;
 
     const reader   = new FileReader();
     reader.onerror = () => alert("File read error.");
@@ -717,7 +745,7 @@ async function uploadExcel() {
         const sheet = wb.Sheets[wb.SheetNames[0]];
         let rows    = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-        if (rows.length > 0) rows.shift();
+        if (rows.length > 0) rows.shift(); // remove header row
 
         currentData = rows
           .map(r => {
@@ -738,14 +766,15 @@ async function uploadExcel() {
           })
           .filter(r => r.caseno !== "");
 
-        const opt   = document.createElement("option");
-        opt.value   = uploadVersion;
-        opt.text    = "Upload " + uploadVersion;
+        // Add version option to dropdown
+        const opt = document.createElement("option");
+        opt.value = uploadVersion;
+        opt.text  = "Upload " + uploadVersion;
         versionSelect.appendChild(opt);
         versionSelect.value = uploadVersion;
 
-        versions.push(uploadVersion);
-        await idbSaveVersions(workDate.value, versions);
+        const newVersions = versions ? [...versions, uploadVersion] : [uploadVersion];
+        await idbSaveVersions(workDate.value, newVersions);
         await saveCurrentVersion();
         await saveLocal();
 
@@ -779,70 +808,102 @@ function scanSent()     { scanMode = "SENT";     startScanner(); }
 function scanReceived() { scanMode = "RECEIVED"; startScanner(); }
 
 async function startScanner() {
+  scannerBusy = false; // reset for new scan session
+  scanLabel.textContent = scanMode === "SENT"
+    ? "📤 Scanning for SENT..."
+    : "📥 Scanning for RECEIVED...";
   scannerWrap.style.display = "block";
+
   html5Qr = new Html5Qrcode("video");
   try {
     const devices = await Html5Qrcode.getCameras();
-    if (!devices.length) { alert("Camera nahi mila."); stopScanner(); return; }
-    const cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[devices.length - 1];
-    html5Qr.start(cam.id, { fps: 10, qrbox: 250 }, text => handleScan(text.trim()));
+    if (!devices || !devices.length) {
+      alert("Camera nahi mila.");
+      stopScanner();
+      return;
+    }
+    // Prefer back camera on mobile
+    const cam = devices.find(d => d.label.toLowerCase().includes("back"))
+             || devices[devices.length - 1];
+
+    await html5Qr.start(
+      cam.id,
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      text => handleScan(text.trim())
+    );
   } catch(err) {
-    console.error("Scanner error:", err);
+    console.error("Scanner start error:", err);
+    alert("Camera start nahi hua: " + err);
     stopScanner();
   }
 }
 
 function stopScanner() {
   if (html5Qr) {
-    html5Qr.stop().then(() => html5Qr.clear()).catch(e => console.error(e));
+    html5Qr.stop()
+      .then(() => html5Qr.clear())
+      .catch(e => console.warn("Scanner stop warning:", e));
     html5Qr = null;
   }
+  scannerBusy = false;
   scannerWrap.style.display = "none";
 }
 
 async function handleScan(code) {
-  const now = Date.now();
-  if (code === lastScanCode && now - lastScanTime < 1500) return;
-  lastScanCode = code;
-  lastScanTime = now;
+  // ── One-scan-per-open: ignore all callbacks after first successful entry ──
+  if (scannerBusy) return;
+
+  if (!code) return;
 
   const idx = currentData.findIndex(r => r.caseno === code);
+
   if (idx === -1) {
-    alert("File Not Found: " + code);
+    scannerBusy = true;          // lock scanner even on error so it stops
+    stopScanner();
+    alert("❌ File Not Found: " + code);
     speak("File not found");
     return;
   }
 
   if (scanMode === "SENT") {
     if (currentData[idx].sent === "Sent") {
-      alert("Already Sent");
+      scannerBusy = true;
+      stopScanner();
+      alert("ℹ️ Already Sent: " + code);
       speak("Already sent");
       return;
     }
+    scannerBusy = true;          // lock — stop accepting more scans
+    stopScanner();               // close scanner immediately
     currentData[idx].sent = "Sent";
     currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-    alert("✅ Sent");
     speak("File sent");
+    alert("✅ SENT: " + code);
   }
 
-  if (scanMode === "RECEIVED") {
+  else if (scanMode === "RECEIVED") {
     if (currentData[idx].sent !== "Sent") {
-      alert("File abhi Sent nahi hua");
+      scannerBusy = true;
+      stopScanner();
+      alert("❌ File abhi SENT nahi hua: " + code + "\nPehle SEND karo.");
       speak("File not sent yet");
       return;
     }
     if (currentData[idx].received === "Received") {
-      alert("Already Received");
+      scannerBusy = true;
+      stopScanner();
+      alert("ℹ️ Already Received: " + code);
       speak("Already received");
       return;
     }
+    scannerBusy = true;          // lock
+    stopScanner();               // close scanner immediately
     currentData[idx].received     = "Received";
     currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
     lastReceivedIndex             = idx;
     currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-    alert("✅ Received");
-    // ✅ FIX 2: Missing semicolon after speak() — caused JS crash
     speak("File received");
+    alert("✅ RECEIVED: " + code);
     nextDatePopup.style.display = "block";
   }
 
@@ -851,178 +912,25 @@ async function handleScan(code) {
   scrollToFile(code);
   updateDashboard();
   await saveLocal();
-  stopScanner();
 }
 
-// ===================== Scroll =====================
+// ===================== Scroll & Highlight =====================
 function scrollToFile(caseno) {
   const row = document.getElementById("row_" + sanitizeId(caseno));
   if (!row) return;
   row.scrollIntoView({ behavior: "smooth", block: "center" });
   row.classList.add("highlight");
-  setTimeout(() => row.classList.remove("highlight"), 3000);
+  setTimeout(() => row.classList.remove("highlight"), 4000);
 }
 
-// ===================== Manual Entry =====================
-let dropdownActiveIndex = -1;
-
-function showManualStatus(msg, type) {
-  const el = document.getElementById("manualStatus");
-  el.textContent  = msg;
-  el.className    = "manual-status " + type;
-  clearTimeout(el._hideTimer);
-  if (type === "success") {
-    el._hideTimer = setTimeout(() => { el.className = "manual-status"; }, 3000);
-  }
-}
-
-function onManualInput() {
-  const val = manualCaseInput.value.trim().toLowerCase();
-  dropdownActiveIndex = -1;
-
-  if (!val || !currentData.length) {
-    closeCaseDropdown();
-    return;
-  }
-
-  // Match case no OR party name
-  const matches = currentData.filter(r =>
-    String(r.caseno).toLowerCase().includes(val) ||
-    String(r.partyname).toLowerCase().includes(val)
-  ).slice(0, 20);
-
-  if (!matches.length) { closeCaseDropdown(); return; }
-
-  const dd = document.getElementById("caseDropdown");
-  dd.innerHTML = matches.map((r, i) =>
-    `<div class="drop-item" data-caseno="${String(r.caseno).replace(/"/g,'&quot;')}"
-          onmousedown="selectDropItem('${String(r.caseno).replace(/'/g,"\\'")}')">
-       <span class="drop-caseno">${r.caseno}</span>
-       <span class="drop-party">${r.partyname || ""} ${r.section ? "| " + r.section : ""}</span>
-     </div>`
-  ).join("");
-  dd.style.display = "block";
-}
-
-function onManualKeyDown(e) {
-  const dd    = document.getElementById("caseDropdown");
-  const items = dd.querySelectorAll(".drop-item");
-  if (!items.length) return;
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    dropdownActiveIndex = Math.min(dropdownActiveIndex + 1, items.length - 1);
-    updateDropHighlight(items);
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    dropdownActiveIndex = Math.max(dropdownActiveIndex - 1, 0);
-    updateDropHighlight(items);
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    if (dropdownActiveIndex >= 0 && items[dropdownActiveIndex]) {
-      const cn = items[dropdownActiveIndex].dataset.caseno;
-      selectDropItem(cn);
-    }
-  } else if (e.key === "Escape") {
-    closeCaseDropdown();
-  }
-}
-
-function updateDropHighlight(items) {
-  items.forEach((el, i) => {
-    el.classList.toggle("active", i === dropdownActiveIndex);
-    if (i === dropdownActiveIndex) el.scrollIntoView({ block: "nearest" });
-  });
-}
-
-function selectDropItem(caseno) {
-  manualCaseInput.value = caseno;
-  closeCaseDropdown();
-  document.getElementById("manualStatus").className = "manual-status"; // clear
-}
-
-function closeCaseDropdown() {
-  document.getElementById("caseDropdown").style.display = "none";
-  dropdownActiveIndex = -1;
-}
-
-// Close dropdown on outside click
-document.addEventListener("click", e => {
-  if (!e.target.closest(".case-dropdown-wrap")) closeCaseDropdown();
-});
-
-async function manualAction(mode) {
-  const caseNo = manualCaseInput.value.trim();
-
-  if (!caseNo) {
-    showManualStatus("⚠️ Pehle Case No enter karo.", "error");
-    return;
-  }
-
-  if (!currentData.length) {
-    showManualStatus("⚠️ Koi data nahi hai. Pehle Excel upload karo.", "error");
-    return;
-  }
-
-  const idx = currentData.findIndex(r => String(r.caseno).trim() === caseNo);
-
-  if (idx === -1) {
-    showManualStatus("❌ Case Not Found: " + caseNo, "error");
-    speak("Case not found");
-    return;
-  }
-
-  const rec = currentData[idx];
-
-  if (mode === "SENT") {
-    if (rec.sent === "Sent") {
-      showManualStatus("ℹ️ Yeh file pehle se SENT hai: " + caseNo, "info");
-      speak("Already sent");
-      return;
-    }
-    currentData[idx].sent = "Sent";
-    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-    showManualStatus("✅ SENT ho gaya: " + caseNo, "success");
-    speak("File sent");
-    manualCaseInput.value = "";
-
-  } else if (mode === "RECEIVED") {
-    // Error: received before sent
-    if (rec.sent !== "Sent") {
-      showManualStatus("❌ Error: Yeh file abhi SENT nahi hua hai. Pehle SEND karo.", "error");
-      speak("File not sent yet");
-      return;
-    }
-    if (rec.received === "Received") {
-      showManualStatus("ℹ️ Yeh file pehle se RECEIVED hai: " + caseNo, "info");
-      speak("Already received");
-      return;
-    }
-    currentData[idx].received     = "Received";
-    currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
-    lastReceivedIndex             = idx;
-    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
-    showManualStatus("✅ RECEIVED ho gaya: " + caseNo, "success");
-    speak("File received");
-    manualCaseInput.value = "";
-    // Open next date popup (same as scan)
-    nextDatePopup.style.display = "block";
-  }
-
-  drawTable(getFilteredData());
-  scrollToFile(caseNo);
-  updateDashboard();
-  await saveLocal();
-}
-
-// ===================== Next Date =====================
+// ===================== Next Date Popup =====================
 async function saveNextDate() {
   if (lastReceivedIndex === null) return;
   const selectedDate = nextDateInput.value;
   if (!selectedDate) { alert("Date select karo"); return; }
   currentData[lastReceivedIndex].nextdate = selectedDate;
   currentData[lastReceivedIndex].searchableText = generateSearchableText(currentData[lastReceivedIndex]);
-  nextDateInput.value         = '';
+  nextDateInput.value         = "";
   nextDatePopup.style.display = "none";
   lastReceivedIndex           = null;
   drawTable(getFilteredData());
@@ -1035,7 +943,7 @@ function closePopup() {
   lastReceivedIndex = null;
 }
 
-// ===================== Remark =====================
+// ===================== Remark (debounced) =====================
 async function updateRemark(caseNo, val) {
   clearTimeout(remarkTimeout);
   remarkTimeout = setTimeout(async () => {
@@ -1064,8 +972,10 @@ function drawTable(data) {
         const casenoAttr = String(r.caseno).replace(/"/g, '&quot;');
         const casenoJs   = String(r.caseno).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const valAttr    = String(r[k] || "").replace(/"/g, '&quot;');
-        row += '<td><input data-caseno="' + casenoAttr + '" value="' + valAttr
-             + '" oninput="updateRemark(\'' + casenoJs + '\',this.value)" placeholder="Add remark..."></td>';
+        row += '<td><input data-caseno="' + casenoAttr
+             + '" value="' + valAttr
+             + '" oninput="updateRemark(\'' + casenoJs + '\',this.value)"'
+             + ' placeholder="Add remark..."></td>';
       } else if (k === "sent" && r.sent === "Sent") {
         row += '<td style="background:#fff3cd">' + (r[k] || "") + '</td>';
       } else if (k === "received" && r.received === "Received") {
@@ -1080,19 +990,18 @@ function drawTable(data) {
 
   table.innerHTML = html;
 
-  // ✅ FIX 3: Safer cursor-restore — only focus active remark input, others just sync value
+  // Restore cursor position in whichever remark input was active
   setTimeout(() => {
     const active     = document.activeElement;
-    const activeCase = active && active.dataset && active.dataset.caseno
+    const activeCase = (active && active.dataset && active.dataset.caseno)
                        ? active.dataset.caseno : null;
     const cursorPos  = activeCase ? active.selectionStart : null;
 
     document.querySelectorAll('input[data-caseno]').forEach(input => {
       const rec = currentData.find(r => r.caseno === input.dataset.caseno);
       if (!rec) return;
-      // ✅ Only restore focus + cursor if this was the ACTIVE input; don't focus others
       if (activeCase && input.dataset.caseno === activeCase) {
-        if (input.value !== rec.remark) input.value = rec.remark || "";
+        if (input.value !== (rec.remark || "")) input.value = rec.remark || "";
         if (cursorPos != null) {
           try { input.setSelectionRange(cursorPos, cursorPos); } catch(e) {}
         }
@@ -1106,6 +1015,140 @@ function drawTable(data) {
 
 // ===================== Search =====================
 searchBox.addEventListener("input", () => drawTable(getFilteredData()));
+
+// ===================== Manual Entry =====================
+function showManualStatus(msg, type) {
+  const el = document.getElementById("manualStatus");
+  el.textContent = msg;
+  el.className   = "manual-status " + type;
+  clearTimeout(el._timer);
+  if (type === "success") {
+    el._timer = setTimeout(() => { el.className = "manual-status"; }, 3000);
+  }
+}
+
+function onManualInput() {
+  const val = manualCaseInput.value.trim().toLowerCase();
+  dropdownActiveIndex = -1;
+  if (!val || !currentData.length) { closeCaseDropdown(); return; }
+
+  const matches = currentData.filter(r =>
+    String(r.caseno).toLowerCase().includes(val) ||
+    String(r.partyname).toLowerCase().includes(val)
+  ).slice(0, 20);
+
+  if (!matches.length) { closeCaseDropdown(); return; }
+
+  const dd = document.getElementById("caseDropdown");
+  dd.innerHTML = matches.map(r => {
+    const cn      = String(r.caseno).replace(/"/g, '&quot;');
+    const cnJs    = String(r.caseno).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const party   = (r.partyname || "") + (r.section ? " | " + r.section : "");
+    return `<div class="drop-item" data-caseno="${cn}" onmousedown="selectDropItem('${cnJs}')">
+              <span class="drop-caseno">${r.caseno}</span>
+              <span class="drop-party">${party}</span>
+            </div>`;
+  }).join("");
+  dd.style.display = "block";
+}
+
+function onManualKeyDown(e) {
+  const dd    = document.getElementById("caseDropdown");
+  const items = dd.querySelectorAll(".drop-item");
+  if (!items.length) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    dropdownActiveIndex = Math.min(dropdownActiveIndex + 1, items.length - 1);
+    updateDropHighlight(items);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    dropdownActiveIndex = Math.max(dropdownActiveIndex - 1, 0);
+    updateDropHighlight(items);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (dropdownActiveIndex >= 0 && items[dropdownActiveIndex]) {
+      selectDropItem(items[dropdownActiveIndex].dataset.caseno);
+    }
+  } else if (e.key === "Escape") {
+    closeCaseDropdown();
+  }
+}
+
+function updateDropHighlight(items) {
+  items.forEach((el, i) => {
+    el.classList.toggle("active", i === dropdownActiveIndex);
+    if (i === dropdownActiveIndex) el.scrollIntoView({ block: "nearest" });
+  });
+}
+
+function selectDropItem(caseno) {
+  manualCaseInput.value = caseno;
+  closeCaseDropdown();
+  document.getElementById("manualStatus").className = "manual-status";
+}
+
+function closeCaseDropdown() {
+  document.getElementById("caseDropdown").style.display = "none";
+  dropdownActiveIndex = -1;
+}
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".case-dropdown-wrap")) closeCaseDropdown();
+});
+
+async function manualAction(mode) {
+  const caseNo = manualCaseInput.value.trim();
+  if (!caseNo) { showManualStatus("⚠️ Pehle Case No enter karo.", "error"); return; }
+  if (!currentData.length) { showManualStatus("⚠️ Koi data nahi. Pehle Excel upload karo.", "error"); return; }
+
+  const idx = currentData.findIndex(r => String(r.caseno).trim() === caseNo);
+  if (idx === -1) {
+    showManualStatus("❌ Case Not Found: " + caseNo, "error");
+    speak("Case not found");
+    return;
+  }
+
+  const rec = currentData[idx];
+
+  if (mode === "SENT") {
+    if (rec.sent === "Sent") {
+      showManualStatus("ℹ️ Yeh file pehle se SENT hai: " + caseNo, "info");
+      speak("Already sent");
+      return;
+    }
+    currentData[idx].sent = "Sent";
+    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+    showManualStatus("✅ SENT ho gaya: " + caseNo, "success");
+    speak("File sent");
+    manualCaseInput.value = "";
+
+  } else if (mode === "RECEIVED") {
+    if (rec.sent !== "Sent") {
+      showManualStatus("❌ Yeh file abhi SENT nahi hua. Pehle SEND karo.", "error");
+      speak("File not sent yet");
+      return;
+    }
+    if (rec.received === "Received") {
+      showManualStatus("ℹ️ Yeh file pehle se RECEIVED hai: " + caseNo, "info");
+      speak("Already received");
+      return;
+    }
+    currentData[idx].received     = "Received";
+    currentData[idx].receiveddate = new Date().toISOString().split("T")[0];
+    lastReceivedIndex             = idx;
+    currentData[idx].searchableText = generateSearchableText(currentData[idx]);
+    showManualStatus("✅ RECEIVED ho gaya: " + caseNo, "success");
+    speak("File received");
+    manualCaseInput.value = "";
+    nextDatePopup.style.display = "block";
+  }
+
+  drawTable(getFilteredData());
+  scrollToFile(caseNo);
+  updateDashboard();
+  await saveLocal();
+}
 
 // ===================== Download Excel =====================
 function downloadExcel() {
@@ -1129,8 +1172,6 @@ function downloadExcel() {
 }
 
 // ===================== Delete Old Data =====================
-// ✅ FIX 4: Separate transactions for metadata and versions stores
-//    (single getStore() call per operation — reusing across async boundaries crashes)
 async function deleteOldData() {
   if (!confirm("30 din se purana data delete karein?")) return;
 
@@ -1138,43 +1179,24 @@ async function deleteOldData() {
   let count   = 0;
 
   try {
-    // --- Metadata keys ---
-    const metaKeys = await new Promise(async (resolve, reject) => {
-      const store = await getStore(STORE_METADATA, 'readonly');
-      const r = store.getAllKeys();
-      r.onsuccess = () => resolve(r.result);
-      r.onerror   = e => reject(e.target.error);
-    });
-
+    // 1. Get all metadata keys, delete old ones (each in its own transaction)
+    const metaKeys = await idbGetAllMetaKeys();
     for (const key of metaKeys) {
       if (key.startsWith('current_version_')) continue;
       const datePart = key.substring(0, 10);
       const fileDate = new Date(datePart);
       if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
-        await idbDelMeta(key);   // idbDelMeta opens its own fresh transaction
+        await idbDelMeta(key);
         count++;
       }
     }
 
-    // --- Version keys ---
-    const allDates = await new Promise(async (resolve, reject) => {
-      const store = await getStore(STORE_VERSIONS, 'readonly');
-      const r = store.getAllKeys();
-      r.onsuccess = () => resolve(r.result);
-      r.onerror   = e => reject(e.target.error);
-    });
-
+    // 2. Get all version date keys, delete old ones
+    const allDates = await idbGetAllVersionKeys();
     for (const dateKey of allDates) {
       const fileDate = new Date(dateKey);
       if (!isNaN(fileDate) && (today - fileDate) / 86400000 > 30) {
-        await idbSaveVersions(dateKey, null).catch(() => {});   // soft ignore
-        // Delete via fresh transaction
-        await new Promise(async (resolve, reject) => {
-          const store = await getStore(STORE_VERSIONS, 'readwrite');
-          const r = store.delete(dateKey);
-          r.onsuccess = () => resolve();
-          r.onerror   = e => reject(e.target.error);
-        });
+        await idbDeleteVersionDate(dateKey);
       }
     }
 
@@ -1188,3 +1210,4 @@ async function deleteOldData() {
 </script>
 </body>
 </html>
+      
